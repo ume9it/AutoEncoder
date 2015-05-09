@@ -16,3 +16,6 @@
 \\psf\home\documents\visual studio 2013\Projects\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csproj.GenerateResource.Cache
 \\psf\home\documents\visual studio 2013\Projects\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.exe
 \\psf\home\documents\visual studio 2013\Projects\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.pdb
+\\psf\Home\GitHub\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.exe.config
+\\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\WindowsFormsApplication4.exe
+\\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\WindowsFormsApplication4.pdb
