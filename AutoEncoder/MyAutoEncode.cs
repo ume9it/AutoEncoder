@@ -7,18 +7,29 @@ using System.Xml.Linq;
 using System.IO;
 using System.Windows.Forms;
 
-namespace AutoEncoder
+namespace MyNameSpace
 {
     class MyAutoEncode : MyBaseClass
     {
-        MyExtApplication MyExtApplication;
+        #region フィールド
+        MyExtApplication myExtApplication = null;
+        public static MyAutoEncode myAutoEncode = null;
 
+        #endregion 
+
+        #region Public
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        public MyAutoEncode(Form1 f)
+        public MyAutoEncode()
         {
-            MyExtApplication = new MyExtApplication(f);
+            myExtApplication = new MyExtApplication();
+            myAutoEncode = this;
+        }
+
+        public static MyAutoEncode GetInstance()
+        {
+            return myAutoEncode;
         }
 
         /// <summary>
@@ -28,62 +39,54 @@ namespace AutoEncoder
         public void encodeMovie()
         {
             // DGIndexでTSをD2Vに
+            
+            // デバッグ用
+            //tsToD2V();
+            //tsToAAC();
 
-            tsToD2V();
-
-            lstGLTsFiles.ForEach(tsFile => 
+            foreach (string tsFilePath in lstGLTsFiles)
             {
-                strGLFileName = tsFile;
-
                 // 録画ディレクトリから作業ディレクトリへ名前を変更し、TSファイルを移動する
                 //（ファイル名に記号などが含まれている場合、外部アプリケーションがエラーを起こす可能性がある）
-                File.Move(strGLRecDir + tsFile + ".ts", strGLWorkDir + strGLTempName + ".ts");
+                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLTempName + ".ts");
 
                 // DGIndexでTSをD2Vに
-                tsToD2V();
-            });
-        }
 
+                tsToD2V().ContinueWith(task =>
+                    {
+                        tsToAAC();
+                    });
+            }
+        }
+        #endregion
+
+        #region Private
         /// <summary>
         /// DGIndex.exeを使用し、TSをd2vファイルとaacファイルに分離
         /// （録画ファイルの放送局がTOKYOMXの場合、ここで得たaacは壊れているので、ts2aacから取得する）
         /// </summary>
         /// <param name="strFileName">入力ファイル名(拡張子・パスを除いたファイル名のみ)</param>
         /// <returns>実行成否</returns>
-        public void tsToD2V()
+        private Task tsToD2V()
         {
             // 設定したコマンドライン引数を渡してDGIndex.exeを起動
 
-            tokenSource = new System.Threading.CancellationTokenSource();
-            token = tokenSource.Token;
-
-            Task.Factory.StartNew(() =>
+            Task taskDgIndex = Task.Factory.StartNew(() =>
             {
+                myExtApplication.runExternalApp(EP_APP_DG_INDEX, strGLTempName, strGLTempName);
+                //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_DG_INDEX + ".exe");
 
-                //MyExtApplication.runExternalApp(EP_APP_DG_INDEX, strGLTempName, strGLTempName);
-                MyExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_DG_INDEX + ".exe");
-
-                IEnumerable<string> strCollapseAAC = Directory.GetFiles(strGLWorkDir, "*.aac");
-
-                // aacファイルを削除する（取得したaacは壊れているケースが多いため不使用）
-                if (strCollapseAAC.Any())
-                {
-                    File.Delete(strCollapseAAC.First());
-                }
-
-            }, token).ContinueWith(task =>
+            }).ContinueWith(task =>
             {
-                //while (token.IsCancellationRequested == false)
-                //{
-                //    System.Threading.Thread.Sleep(100);
-                //    Console.WriteLine(DateTime.Now.ToString("yyyyMMdd:mmhhss"));
-                //}
-                MyErrorHandling.showInfoMessage("おわり");
+                MyErrorHandling.showInfoMessage(EP_APP_DG_INDEX + "の処理が終了しました");
+                deleteAAC();
             });
 
             // TODO
             // コマンドライン引数が間違っていて、DGIndexが起動はしたが処理を開始しない場合にどうエラー判定するか
             // コマンドライン引数のValidation
+
+            return taskDgIndex;
         }
 
         /// <summary>
@@ -91,12 +94,34 @@ namespace AutoEncoder
         /// </summary>
         /// <param name="strFileName">入力ファイル名(拡張子・パスを除いたファイル名のみ)</param>
         /// <returns>実行成否</returns>
-        public void tsToAAC()
+        private Task tsToAAC()
         {
             // 設定したコマンドライン引数を渡してts2aac.exeを起動
-            MyExtApplication.runExternalApp(EP_APP_TS2AAC, strGLTempName, strGLTempName);
 
-            //form1.ProcessDialogTextBox.Text = strOutput;
+            Task.Factory.StartNew(() =>
+            {
+                myExtApplication.runExternalApp(EP_APP_TS2AAC, strGLTempName, strGLTempName);
+                //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_TS2AAC + ".exe");
+
+            }).ContinueWith(task =>
+            {
+                MyErrorHandling.showInfoMessage(EP_APP_TS2AAC + "の処理が終了しました");
+            });
         }
+
+        /// <summary>
+        /// DGIndexが生成したAACを削除する
+        /// </summary>
+        private void deleteAAC()
+        {
+            IEnumerable<string> strCollapseAAC = Directory.GetFiles(strGLWorkDir, "*.aac");
+
+            // aacファイルを削除する（取得したaacは壊れているケースが多いため不使用）
+            if (strCollapseAAC.Any())
+            {
+                File.Delete(strCollapseAAC.First());
+            }
+        }
+        #endregion
     }
 }
