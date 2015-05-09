@@ -46,7 +46,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MyBaseClass.cs" />
-    <Compile Include="MyFormModify.cs" />
     <Compile Include="MyReadConfig.cs" />
     <Compile Include="MyAutoEncode.cs" />
     <Compile Include="MyErrorHandling.cs" />

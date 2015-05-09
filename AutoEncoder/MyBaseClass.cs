@@ -9,10 +9,6 @@ namespace AutoEncoder
 {
     class MyBaseClass
     {
-        protected Form1 form1;
-        public System.Threading.CancellationTokenSource tokenSource = null;
-        public System.Threading.CancellationToken token;
-
         #region 定数
 
         #region ExePath.config

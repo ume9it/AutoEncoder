@@ -11,9 +11,8 @@ namespace AutoEncoder
 {
     class MyExtApplication : MyBaseClass
     {
-        public MyExtApplication(Form1 f)
+        public MyExtApplication()
         {
-            form1 = f;
         }
 
         /// <summary>
@@ -65,11 +64,13 @@ namespace AutoEncoder
                 process.StartInfo.ErrorDialog = true;
 
                 // 標準出力を取得するイベントハンドラ
-                process.OutputDataReceived += form1.process_OutputDataReceived;
+                process.OutputDataReceived += AutoEncoder.GetInstance().process_OutputDataReceived;
 
                 process.Start();
                 
                 process.BeginOutputReadLine();
+
+                process.WaitForExit();
 
             }
             catch(Exception ex)

@@ -10,28 +10,36 @@ using System.Windows.Forms;
 
 namespace AutoEncoder
 {
-    public partial class Form1 : Form
+    public partial class AutoEncoder : Form
     {
+        public static AutoEncoder autoEnc;
+
         TextBox processDialog;
-        MyAutoEncode autoEncode;
+        MyAutoEncode myAutoEncode;
         MyExtApplication myExt;
 
 
-        public Form1()
+        public AutoEncoder()
         {
             InitializeComponent();
 
-            autoEncode = new MyAutoEncode(this);
-            myExt = new MyExtApplication(this);
+            myAutoEncode = new MyAutoEncode();
+            myExt = new MyExtApplication();
+            autoEnc = this;
 
             processDialog = this.ProcessDialogTextBox;
+        }
+
+        public static AutoEncoder GetInstance()
+        {
+            return autoEnc;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             try
             {
-                autoEncode.encodeMovie();
+                myAutoEncode.encodeMovie();
 
                 // task終了時の処理を登録
                 //task.ContinueWith(OnTaskCompleted);
@@ -42,11 +50,21 @@ namespace AutoEncoder
             }
         }
 
+        /// <summary>
+        /// テキストボックスに文字を追加
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="textBox"></param>
         private void AddText(string text, TextBox textBox)
         {
             textBox.AppendText(text + "\r\n");
         }
 
+        /// <summary>
+        /// 文字が出力されたことを検知
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">e.Dataで出力された文字を検知</param>
         public void process_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
             Console.WriteLine(e.Data);
@@ -58,12 +76,6 @@ namespace AutoEncoder
                     {
                         AddText(e.Data, processDialog);
                     }, true);
-            }
-            else
-            {
-                // タスクをキャンセル（無限ループを脱出するため）
-                autoEncode.tokenSource.Cancel(true);
-                autoEncode.tokenSource.Dispose();
             }
         }
 

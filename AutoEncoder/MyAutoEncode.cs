@@ -7,7 +7,7 @@ using System.Xml.Linq;
 using System.IO;
 using System.Windows.Forms;
 
-namespace MyNameSpace
+namespace AutoEncoder
 {
     class MyAutoEncode : MyBaseClass
     {
@@ -52,10 +52,8 @@ namespace MyNameSpace
 
                 // DGIndexでTSをD2Vに
 
-                tsToD2V().ContinueWith(task =>
-                    {
-                        tsToAAC();
-                    });
+                Task taskTsToD2V = tsToD2V();
+                Task taskTsToAAC = tsToAAC(taskTsToD2V);
             }
         }
         #endregion
@@ -94,19 +92,20 @@ namespace MyNameSpace
         /// </summary>
         /// <param name="strFileName">入力ファイル名(拡張子・パスを除いたファイル名のみ)</param>
         /// <returns>実行成否</returns>
-        private Task tsToAAC()
+        private Task tsToAAC(Task taskBefore)
         {
-            // 設定したコマンドライン引数を渡してts2aac.exeを起動
+            Task taskTsToAAC = taskBefore.ContinueWith(task =>
+                {
+                    // 設定したコマンドライン引数を渡してts2aac.exeを起動
+                    myExtApplication.runExternalApp(EP_APP_TS2AAC, strGLTempName, strGLTempName);
+                    //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_TS2AAC + ".exe");
 
-            Task.Factory.StartNew(() =>
-            {
-                myExtApplication.runExternalApp(EP_APP_TS2AAC, strGLTempName, strGLTempName);
-                //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_TS2AAC + ".exe");
+                }).ContinueWith(taskAfter =>
+                    {
+                        MyErrorHandling.showInfoMessage(EP_APP_TS2AAC + "の処理が終了しました");
+                    });
 
-            }).ContinueWith(task =>
-            {
-                MyErrorHandling.showInfoMessage(EP_APP_TS2AAC + "の処理が終了しました");
-            });
+            return taskTsToAAC;
         }
 
         /// <summary>
