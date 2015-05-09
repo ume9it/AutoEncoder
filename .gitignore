@@ -1,5 +1,7 @@
-.ts
-.d2v
-.aac
-.log
-.wav
+*.ts
+*.d2v
+*.aac
+*.log
+*.wav
+*.ini
+*.exe
