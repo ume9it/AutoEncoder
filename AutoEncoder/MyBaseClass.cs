@@ -53,6 +53,7 @@ namespace AutoEncoder
         protected string strGLConfigAutoEncodePath;
         protected string strGLRecDir;
         protected string strGLWorkDir;
+        protected List<string> lstGLFileFullPath;
         protected List<string> lstGLTsFiles;
 
         #endregion
@@ -80,10 +81,15 @@ namespace AutoEncoder
                 , MyReadConfig.readConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_WORK)
                 );
 
-            // 録画ディレクトリの中の.tsファイルをすべて配列に登録(拡張子・パスを除いたファイル名のみ)
-            lstGLTsFiles = Directory
+            // 録画ディレクトリの中の.tsファイルをすべて配列に登録
+            lstGLFileFullPath = Directory
                 .GetFiles(strGLRecDir)
                 .Where(dirFile => dirFile.Split('.').Last() == "ts")
+                .Select(tsFile => tsFile)
+                .ToList();
+
+            // 登録した.tsファイルの拡張子・パスを除いて名前だけにする
+            lstGLTsFiles = lstGLFileFullPath
                 .Select(tsFile => tsFile
                     .Split('\\').Last()
                     .Split('.').First()

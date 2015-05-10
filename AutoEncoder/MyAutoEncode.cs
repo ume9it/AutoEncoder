@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace AutoEncoder
 {
@@ -48,6 +49,8 @@ namespace AutoEncoder
             // 一つのファイルに二つの放送波が混在しているため？
             taskAfterExecute dlgAfterTsToD2V = new taskAfterExecute(DeleteAAC);
 
+            taskAfterExecute dlgAfterTsToAAC = new taskAfterExecute(RenameAAC);
+
             // デバッグ用
             //tsToD2V();
             //tsToAAC();
@@ -56,6 +59,9 @@ namespace AutoEncoder
             {
                 // 録画ディレクトリ内のTSファイルをそれぞれ処理する
 
+                // グローバル変数に現在処理している.tsファイルを登録
+                strGLFileName = tsFilePath;
+
                 // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
                 File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + tsFilePath + ".ts");
 
@@ -63,7 +69,7 @@ namespace AutoEncoder
                 Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, tsFilePath, tsFilePath, dlgAfterTsToD2V);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
-                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, null);
+                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, dlgAfterTsToAAC);
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
                 Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, tsFilePath, tsFilePath, taskTsToAAC, null);
@@ -197,7 +203,7 @@ namespace AutoEncoder
         }
 
         /// <summary>
-        /// DGIndexが生成したAACを削除する
+        /// DGIndex.exeが生成したAACを削除する
         /// </summary>
         private void DeleteAAC()
         {
@@ -210,9 +216,27 @@ namespace AutoEncoder
             }
         }
 
+        /// <summary>
+        /// ts2aac.exeが生成したaacファイルの名前を変更
+        /// </summary>
+        /// <param name="strGLFileName">もともとのファイル名</param>
         private void RenameAAC()
         {
+            // 正規表現
+            Regex regex = new Regex(@" PID 0x110 DELAY " + @".+ms\.aac");
 
+            // 正規表現にマッチするaacファイルを検索
+            string strRenameAac = Directory
+                .GetFiles(strGLWorkDir)
+                .Where(dirFile => dirFile.Split('.').Last() == "aac")
+                .Where(aacFile => regex.IsMatch(aacFile))
+                .Select(item => item)
+                .First();
+
+            string strNewAacName = Path.Combine(strGLWorkDir, strGLFileName);
+
+            // ファイル名の余計な文字列を削除
+            File.Move(strRenameAac, strNewAacName);
         }
         #endregion
     }
