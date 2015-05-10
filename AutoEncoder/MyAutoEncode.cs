@@ -33,6 +33,7 @@ namespace AutoEncoder
         }
 
 
+
         public static MyAutoEncode GetInstance()
         {
             return myAutoEncode;
@@ -49,7 +50,7 @@ namespace AutoEncoder
             // 一つのファイルに二つの放送波が混在しているため？
             taskAfterExecute dlgAfterTsToD2V = new taskAfterExecute(DeleteAAC);
 
-            taskAfterExecute dlgAfterTsToAAC = new taskAfterExecute(RenameAAC);
+            taskAfterExecute dlgAfterTsToAacAC = new taskAfterExecute(RenameAAC);
 
             // デバッグ用
             //tsToD2V();
@@ -69,7 +70,7 @@ namespace AutoEncoder
                 Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, tsFilePath, tsFilePath, dlgAfterTsToD2V);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
-                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, dlgAfterTsToAAC);
+                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, dlgAfterTsToAacAC);
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
                 Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, tsFilePath, tsFilePath, taskTsToAAC, null);

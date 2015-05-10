@@ -66,18 +66,18 @@ namespace AutoEncoder
             #region グローバル変数に値を設定
 
             // ExePath.configのファイルパス
-            strGLConfigExePath = System.Environment.CurrentDirectory + @"\ExePath.config";
+            strGLConfigExePath = Program.strGLCurrentDirectory + @"\ExePath.config";
 
             // AutoEncode.configのファイルパス
-            strGLConfigAutoEncodePath = System.Environment.CurrentDirectory + @"\AutoEncode.config";
+            strGLConfigAutoEncodePath = Program.strGLCurrentDirectory + @"\AutoEncode.config";
 
             // 録画ファイルを保存しているディレクトリのパス
-            strGLRecDir = Path.Combine(System.Environment.CurrentDirectory
+            strGLRecDir = Path.Combine(Program.strGLCurrentDirectory
                 , MyReadConfig.readConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_REC)
                 );
 
             // 作業用一時ファイルを置くディレクトリのパス
-            strGLWorkDir = Path.Combine(System.Environment.CurrentDirectory
+            strGLWorkDir = Path.Combine(Program.strGLCurrentDirectory
                 , MyReadConfig.readConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_WORK)
                 );
 

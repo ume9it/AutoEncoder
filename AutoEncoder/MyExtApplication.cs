@@ -24,7 +24,7 @@ namespace AutoEncoder
         /// <returns>外部アプリケーションの標準出力</returns>
         public void processStart(string strAppName, string strAppArg = "")
         {
-            processStart(strAppName, System.Environment.CurrentDirectory, strAppArg);
+            processStart(strAppName, Program.strGLCurrentDirectory, strAppArg);
         }
 
         /// <summary>
