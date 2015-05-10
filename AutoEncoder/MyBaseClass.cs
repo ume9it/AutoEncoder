@@ -48,7 +48,7 @@ namespace AutoEncoder
         protected bool isProcessEnd = false; 
 
         protected string strGLFileName;
-        protected string strGLTempName = "temp";
+        protected string strGLTempName;
         protected string strGLConfigExePath;
         protected string strGLConfigAutoEncodePath;
         protected string strGLRecDir;

@@ -65,6 +65,9 @@ namespace AutoEncoder
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
                 Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, strGLTempName, strGLTempName, taskTsToD2V, null);
+
+                // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
+                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, strGLTempName, strGLTempName, taskTsToAAC, null);
             }
         }
         #endregion
