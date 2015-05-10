@@ -56,18 +56,17 @@ namespace AutoEncoder
             {
                 // 録画ディレクトリ内のTSファイルをそれぞれ処理する
 
-                // 録画ディレクトリから作業ディレクトリへ名前を変更し、TSファイルを移動する
-                //（ファイル名に記号などが含まれている場合、外部アプリケーションがエラーを起こす可能性がある）
-                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLTempName + ".ts");
+                // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
+                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + tsFilePath + ".ts");
 
                 // DGIndex.exeでTSをD2Vに
-                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, strGLTempName, strGLTempName, dlgAfterTsToD2V);
+                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, tsFilePath, tsFilePath, dlgAfterTsToD2V);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
-                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, strGLTempName, strGLTempName, taskTsToD2V, null);
+                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, null);
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
-                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, strGLTempName, strGLTempName, taskTsToAAC, null);
+                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, tsFilePath, tsFilePath, taskTsToAAC, null);
             }
         }
         #endregion
@@ -209,6 +208,11 @@ namespace AutoEncoder
             {
                 File.Delete(strCollapseAAC.First());
             }
+        }
+
+        private void RenameAAC()
+        {
+
         }
         #endregion
     }
