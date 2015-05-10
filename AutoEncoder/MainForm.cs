@@ -10,39 +10,47 @@ using System.Windows.Forms;
 
 namespace AutoEncoder
 {
-    public partial class AutoEncoder : Form
+    public partial class MainForm : Form
     {
-        public static AutoEncoder autoEnc;
+        public static MainForm mainForm;
 
         TextBox processDialog;
         MyAutoEncode myAutoEncode;
         MyExtApplication myExt;
 
-
-        public AutoEncoder()
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        public MainForm()
         {
             InitializeComponent();
 
             myAutoEncode = new MyAutoEncode();
             myExt = new MyExtApplication();
-            autoEnc = this;
+            mainForm = this;
 
             processDialog = this.ProcessDialogTextBox;
         }
 
-        public static AutoEncoder GetInstance()
+        /// <summary>
+        /// 自身のインスタンスを取得
+        /// </summary>
+        /// <returns></returns>
+        public static MainForm GetInstance()
         {
-            return autoEnc;
+            return mainForm;
         }
 
+        /// <summary>
+        /// エンコード開始ボタンをクリック後の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
             try
             {
-                myAutoEncode.encodeMovie();
-
-                // task終了時の処理を登録
-                //task.ContinueWith(OnTaskCompleted);
+                myAutoEncode.EncodeMovie();
             }
             catch(Exception ex)
             {
@@ -71,6 +79,8 @@ namespace AutoEncoder
 
             if (e.Data != null)
             {
+                // 文字の出力が終わっていない場合
+
                 InvokeIfRequired(
                     (Action)delegate()
                     {

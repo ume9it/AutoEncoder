@@ -64,7 +64,7 @@ namespace AutoEncoder
                 process.StartInfo.ErrorDialog = true;
 
                 // 標準出力を取得するイベントハンドラ
-                process.OutputDataReceived += AutoEncoder.GetInstance().process_OutputDataReceived;
+                process.OutputDataReceived += MainForm.GetInstance().process_OutputDataReceived;
 
                 process.Start();
                 

@@ -1,6 +1,6 @@
 ﻿namespace AutoEncoder
 {
-    partial class AutoEncoder
+    partial class MainForm
     {
         /// <summary>
         /// 必要なデザイナー変数です。

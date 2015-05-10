@@ -24,4 +24,4 @@
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csprojResolveAssemblyReference.cache
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.Properties.Resources.resources
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csproj.GenerateResource.Cache
-\\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.AutoEncoder.resources
+\\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.MainForm.resources

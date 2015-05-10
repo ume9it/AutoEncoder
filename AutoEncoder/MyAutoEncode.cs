@@ -12,8 +12,12 @@ namespace AutoEncoder
     class MyAutoEncode : MyBaseClass
     {
         #region フィールド
-        MyExtApplication myExtApplication = null;
+
         public static MyAutoEncode myAutoEncode = null;
+        MyExtApplication myExtApplication = null;
+
+        // 非同期タスクの処理終了後に実行するメソッドを呼び出すためのデリゲート
+        delegate void taskAfterExecute();
 
         #endregion 
 
@@ -27,6 +31,7 @@ namespace AutoEncoder
             myAutoEncode = this;
         }
 
+
         public static MyAutoEncode GetInstance()
         {
             return myAutoEncode;
@@ -36,82 +41,163 @@ namespace AutoEncoder
         /// 録画ディレクトリ内のすべてのTSファイルを順次アプリケーションに引き渡していく
         /// </summary>
         /// <returns>実行成否</returns>
-        public void encodeMovie()
+        public void EncodeMovie()
         {
-            // DGIndexでTSをD2Vに
-            
+            // DGIndexの処理終了　→　DGIndexが出力したAACを削除
+            // (放送局がTOKYO MXのファイルのAACファイルは壊れているので別途ts2aac.exeにて取得する)
+            // 一つのファイルに二つの放送波が混在しているため？
+            taskAfterExecute dlgAfterTsToD2V = new taskAfterExecute(DeleteAAC);
+
             // デバッグ用
             //tsToD2V();
             //tsToAAC();
 
             foreach (string tsFilePath in lstGLTsFiles)
             {
+                // 録画ディレクトリ内のTSファイルをそれぞれ処理する
+
                 // 録画ディレクトリから作業ディレクトリへ名前を変更し、TSファイルを移動する
                 //（ファイル名に記号などが含まれている場合、外部アプリケーションがエラーを起こす可能性がある）
                 File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLTempName + ".ts");
 
-                // DGIndexでTSをD2Vに
+                // DGIndex.exeでTSをD2Vに
+                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, strGLTempName, strGLTempName, dlgAfterTsToD2V);
 
-                Task taskTsToD2V = tsToD2V();
-                Task taskTsToAAC = tsToAAC(taskTsToD2V);
+                // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
+                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, strGLTempName, strGLTempName, taskTsToD2V, null);
             }
         }
         #endregion
 
         #region Private
         /// <summary>
-        /// DGIndex.exeを使用し、TSをd2vファイルとaacファイルに分離
-        /// （録画ファイルの放送局がTOKYOMXの場合、ここで得たaacは壊れているので、ts2aacから取得する）
+        /// 非同期処理にてタスクを開始する（一番最初の非同期処理）
+        /// タスク内容：各外部アプリケーションにファイルと引数を渡し、ファイルを出力させる
+        /// 外部アプリケーションの出力したメッセージはイベントハンドラにて捕捉、フォームに出力させる
         /// </summary>
-        /// <param name="strFileName">入力ファイル名(拡張子・パスを除いたファイル名のみ)</param>
-        /// <returns>実行成否</returns>
-        private Task tsToD2V()
+        /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
+        /// <returns>この非同期処理のタスクのオブジェクト</returns>
+        private Task TaskExtAppExecute(string strAppName, string strInputFileName, string strOutputFileName, taskAfterExecute dlgTaskAfter)
         {
-            // 設定したコマンドライン引数を渡してDGIndex.exeを起動
+            // 非同期処理１（処理待ちせずに実行）
+            Action actFirst = SetActionFirstExecuteApp(strAppName, strInputFileName, strOutputFileName);
 
-            Task taskDgIndex = Task.Factory.StartNew(() =>
-            {
-                myExtApplication.runExternalApp(EP_APP_DG_INDEX, strGLTempName, strGLTempName);
-                //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_DG_INDEX + ".exe");
+            // 非同期処理２（非同期処理１の終了を待ってから実行する）
+            Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
 
-            }).ContinueWith(task =>
-            {
-                MyErrorHandling.showInfoMessage(EP_APP_DG_INDEX + "の処理が終了しました");
-                deleteAAC();
-            });
+            // 複数の非同期処理の同期処理
+            Task taskDgIndex = 
+                Task.Factory
+                .StartNew(actFirst)
+                .ContinueWith(actNext);
 
             // TODO
-            // コマンドライン引数が間違っていて、DGIndexが起動はしたが処理を開始しない場合にどうエラー判定するか
+            // コマンドライン引数が間違っていて、アプリケーションが起動はしたが処理を開始しない場合にどうエラー判定するか
             // コマンドライン引数のValidation
 
             return taskDgIndex;
         }
 
         /// <summary>
-        /// ts2aac.exeを使用し、TSからaacファイルを抽出する
+        /// 非同期処理にてタスクを開始する(前に実行された非同期タスクが存在する場合)
+        /// タスク内容：各外部アプリケーションにファイルと引数を渡し、ファイルを出力させる
+        /// 外部アプリケーションの出力したメッセージはイベントハンドラにて捕捉、フォームに出力させる
         /// </summary>
-        /// <param name="strFileName">入力ファイル名(拡張子・パスを除いたファイル名のみ)</param>
-        /// <returns>実行成否</returns>
-        private Task tsToAAC(Task taskBefore)
+        /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="taskBefore">この処理の前に行う非同期処理のタスク</param>
+        /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
+        /// <returns>この非同期処理のタスクのオブジェクト</returns>
+        private Task TaskExtAppExecute(string strAppName, string strInputFileName, string strOutputFileName, Task taskBefore, taskAfterExecute dlgTaskAfter)
         {
-            Task taskTsToAAC = taskBefore.ContinueWith(task =>
+            // 非同期処理１（前に起動された非同期処理を待った後に行う）
+            Action<Task> actFirst = SetActionNextExecuteApp(strAppName, strInputFileName, strOutputFileName);
+
+            // 非同期処理２（非同期処理１の終了を待ってから実行する）
+            Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
+
+            // 複数の非同期処理の同期処理
+            Task taskDgIndex = 
+                taskBefore
+                .ContinueWith(actFirst)
+                .ContinueWith(actNext);
+
+            // TODO
+            // コマンドライン引数が間違っていて、アプリケーションが起動はしたが処理を開始しない場合にどうエラー判定するか
+            // コマンドライン引数のValidation
+
+            return taskDgIndex;
+        }
+
+        /// <summary>
+        /// 一番最初の外部アプリケーションの起動
+        /// </summary>
+        /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <returns>Actionオブジェクト</returns>
+        private Action SetActionFirstExecuteApp(string strAppName, string strInputFileName, string strOutputFileName)
+        {
+            Action actFirst = (Action)delegate
+            {
+                // 設定したコマンドライン引数を渡して外部アプリケーションを起動
+
+                myExtApplication.runExternalApp(strAppName, strInputFileName, strOutputFileName);
+            };
+
+            return actFirst;
+        }
+
+        /// <summary>
+        /// 2番目以降の外部アプリケーションの起動
+        /// （前に起動した外部アプリケーションの終了を待ってから起動処理をするため、戻り値が違う）
+        /// </summary>
+        /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <returns>Action＜Task＞オブジェクト</returns>
+        private Action<Task> SetActionNextExecuteApp(string strAppName, string strInputFileName, string strOutputFileName)
+        {
+            Action<Task> actFirst = (Action<Task>)delegate
+            {
+                // 設定したコマンドライン引数を渡して外部アプリケーションを起動
+
+                myExtApplication.runExternalApp(strAppName, strInputFileName, strOutputFileName);
+            };
+
+            return actFirst;
+        }
+
+        /// <summary>
+        /// 外部アプリケーションの処理終了を待ってから行う処理
+        /// </summary>
+        /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
+        /// <returns>Action＜Task＞オブジェクト</returns>
+        private Action<Task> SetActionAfterExecuteApp (string strAppName, taskAfterExecute dlgTaskAfter)
+        {
+            Action<Task> actNext = (Action<Task>)delegate
+            {
+                MyErrorHandling.showInfoMessage(strAppName + "の処理が終了しました");
+
+                if (dlgTaskAfter != null)
                 {
-                    // 設定したコマンドライン引数を渡してts2aac.exeを起動
-                    myExtApplication.runExternalApp(EP_APP_TS2AAC, strGLTempName, strGLTempName);
-                    //myExtApplication.processStart(System.Environment.CurrentDirectory + "\\Library\\" + EP_APP_TS2AAC + ".exe");
+                    // デリゲートが入力されている場合はそのメソッドを実行する
+                    dlgTaskAfter();
+                }
+            };
 
-                }).ContinueWith(taskAfter =>
-                    {
-                        MyErrorHandling.showInfoMessage(EP_APP_TS2AAC + "の処理が終了しました");
-                    });
-
-            return taskTsToAAC;
+            return actNext;
         }
 
         /// <summary>
         /// DGIndexが生成したAACを削除する
         /// </summary>
-        private void deleteAAC()
+        private void DeleteAAC()
         {
             IEnumerable<string> strCollapseAAC = Directory.GetFiles(strGLWorkDir, "*.aac");
 

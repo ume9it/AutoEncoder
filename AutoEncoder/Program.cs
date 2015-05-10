@@ -16,7 +16,7 @@ namespace AutoEncoder
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new AutoEncoder());
+            Application.Run(new MainForm());
         }
     }
 }
