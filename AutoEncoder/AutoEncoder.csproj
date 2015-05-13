@@ -46,6 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MyBaseClass.cs" />
+    <Compile Include="MyControlExtGUI.cs" />
+    <Compile Include="MyMakeConfig.cs" />
     <Compile Include="MyReadConfig.cs" />
     <Compile Include="MyAutoEncode.cs" />
     <Compile Include="MyErrorHandling.cs" />

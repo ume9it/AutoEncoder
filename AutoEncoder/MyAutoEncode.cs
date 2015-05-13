@@ -32,8 +32,10 @@ namespace AutoEncoder
             myAutoEncode = this;
         }
 
-
-
+        /// <summary>
+        /// 自身のインスタンスを取得
+        /// </summary>
+        /// <returns></returns>
         public static MyAutoEncode GetInstance()
         {
             return myAutoEncode;
@@ -74,6 +76,11 @@ namespace AutoEncoder
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
                 Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, tsFilePath, tsFilePath, taskTsToAAC, null);
+
+                MyMakeConfig myMake = new MyMakeConfig();
+
+                myMake.makeAvs();
+
             }
         }
         #endregion
@@ -234,7 +241,7 @@ namespace AutoEncoder
                 .Select(item => item)
                 .First();
 
-            string strNewAacName = Path.Combine(strGLWorkDir, strGLFileName);
+            string strNewAacName = Path.Combine(strGLWorkDir, strGLFileName + ".aac");
 
             // ファイル名の余計な文字列を削除
             File.Move(strRenameAac, strNewAacName);
