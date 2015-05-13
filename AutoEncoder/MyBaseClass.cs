@@ -48,8 +48,8 @@ namespace AutoEncoder
         protected bool isProcessEnd = false; 
 
         protected string strGLFileName;
-        protected string strGLTempName;
         protected string strGLConfigExePath;
+        protected string strGLConfigLibraryPath;
         protected string strGLConfigAutoEncodePath;
         protected string strGLRecDir;
         protected string strGLWorkDir;
@@ -67,6 +67,9 @@ namespace AutoEncoder
 
             // ExePath.configのファイルパス
             strGLConfigExePath = Program.strGLCurrentDirectory + @"\ExePath.config";
+
+            // Library.configのファイルパス
+            strGLConfigLibraryPath = Program.strGLCurrentDirectory + @"\Library.config";
 
             // AutoEncode.configのファイルパス
             strGLConfigAutoEncodePath = Program.strGLCurrentDirectory + @"\AutoEncode.config";

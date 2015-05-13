@@ -16,6 +16,7 @@ namespace AutoEncoder
 
         public static MyAutoEncode myAutoEncode = null;
         MyExtApplication myExtApplication = null;
+        MyMakeConfig myMakeConfig;
 
         // 非同期タスクの処理終了後に実行するメソッドを呼び出すためのデリゲート
         delegate void taskAfterExecute();
@@ -29,6 +30,8 @@ namespace AutoEncoder
         public MyAutoEncode()
         {
             myExtApplication = new MyExtApplication();
+            myMakeConfig = new MyMakeConfig();
+
             myAutoEncode = this;
         }
 
@@ -52,7 +55,7 @@ namespace AutoEncoder
             // 一つのファイルに二つの放送波が混在しているため？
             taskAfterExecute dlgAfterTsToD2V = new taskAfterExecute(DeleteAAC);
 
-            taskAfterExecute dlgAfterTsToAacAC = new taskAfterExecute(RenameAAC);
+            taskAfterExecute dlgAfterTsToAAC = new taskAfterExecute(RenameAAC);
 
             // デバッグ用
             //tsToD2V();
@@ -66,21 +69,19 @@ namespace AutoEncoder
                 strGLFileName = tsFilePath;
 
                 // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
-                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + tsFilePath + ".ts");
+                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLFileName + ".ts");
 
                 // DGIndex.exeでTSをD2Vに
-                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, tsFilePath, tsFilePath, dlgAfterTsToD2V);
+                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, strGLFileName, strGLFileName, dlgAfterTsToD2V);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
-                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, tsFilePath, tsFilePath, taskTsToD2V, dlgAfterTsToAacAC);
+                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, strGLFileName, strGLFileName, taskTsToD2V, dlgAfterTsToAAC);
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
-                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, tsFilePath, tsFilePath, taskTsToAAC, null);
+                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, strGLFileName, strGLFileName, taskTsToAAC, null);
 
-                MyMakeConfig myMake = new MyMakeConfig();
-
-                myMake.makeAvs();
-
+                Action<Task> action = (Action<Task>)delegate{ myMakeConfig.makeAvs(strGLFileName); };
+                taskToWave.ContinueWith(action);
             }
         }
         #endregion
@@ -105,7 +106,7 @@ namespace AutoEncoder
             Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
 
             // 複数の非同期処理の同期処理
-            Task taskDgIndex = 
+            Task taskAsync = 
                 Task.Factory
                 .StartNew(actFirst)
                 .ContinueWith(actNext);
@@ -114,7 +115,7 @@ namespace AutoEncoder
             // コマンドライン引数が間違っていて、アプリケーションが起動はしたが処理を開始しない場合にどうエラー判定するか
             // コマンドライン引数のValidation
 
-            return taskDgIndex;
+            return taskAsync;
         }
 
         /// <summary>
@@ -137,7 +138,7 @@ namespace AutoEncoder
             Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
 
             // 複数の非同期処理の同期処理
-            Task taskDgIndex = 
+            Task taskAsync =
                 taskBefore
                 .ContinueWith(actFirst)
                 .ContinueWith(actNext);
@@ -146,7 +147,7 @@ namespace AutoEncoder
             // コマンドライン引数が間違っていて、アプリケーションが起動はしたが処理を開始しない場合にどうエラー判定するか
             // コマンドライン引数のValidation
 
-            return taskDgIndex;
+            return taskAsync;
         }
 
         /// <summary>

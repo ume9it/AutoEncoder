@@ -1,0 +1,8 @@
+SetMemoryMax(256)
+LoadPlugin("\\psf\Home\GitHub\AutoEncoder\AutoEncoder\bin\Debug\Library\DGDecode.dll")
+vSrc = DGDecode_MPEG2Source("EncodeTest.d2v")
+vSrc = KillAudio(vSrc)
+aSrc = WavSource("EncodeTest.wav")
+aSrc = KillVideo(aSrc)
+AudioDubEx(vSrc,aSrc)
+ConvertToYUY2(interlaced = True)

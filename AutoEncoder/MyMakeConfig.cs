@@ -12,31 +12,38 @@ namespace AutoEncoder
     {
         bool isGLRenewDocument = false;
 
-        public void makeAvs ()
+        public MyMakeConfig()
         {
-            string strAvsName = Path.Combine(strGLWorkDir, strGLFileName + ".avs");
+        }
+
+        public void makeAvs (string strFileName)
+        {
+            string strAvsName = Path.Combine(strGLWorkDir, strFileName + ".avs");
             Dictionary<string, object> dicAvsContents = new Dictionary<string,object>();
 
-            dicAvsContents.Add("LoadPlugin", 2048);
-            dicAvsContents.Add("SetMemoryMax", 2048);
-            dicAvsContents.Add("DGDecode_MPEG2Source", strGLFileName + ".d2v");
-            dicAvsContents.Add("WavSource", 2048);
-            dicAvsContents.Add("interlaced", true);
+            // DGDecode.dllのパス
+            string strDgDecodePath = Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.readConfig(strGLConfigLibraryPath, "DgDecode", "Path"));
 
-            string strAvsContents = 
-                "SetMemoryMax(" + dicAvsContents["SetMemoryMax"] + ")" + "\r\n"
-                + "LoadPlugin(" + "\"" + dicAvsContents["LoadPlugin"] + "\"" + ")" + "\r\n"
-                + "vSrc = DGDecode_MPEG2Source(" + "\"" + dicAvsContents["DGDecode_MPEG2Source"] + "\")" + "\r\n"
-                + "vSrc = KillAudio(vSrc)" + "\r\n"
-                + "aSrc = WavSource(" + "\"" + dicAvsContents["WavSource"] + "\")" + "\r\n"
-                + "aSrc = KillVideo(aSrc)" + "\r\n"
-                + "AudioDubEx(vSrc,aSrc)" + "\r\n"
-                + "ConvertToYUY2(interlaced = " + dicAvsContents["interlaced"] + ")";
+            dicAvsContents.Add("LoadPlugin", strDgDecodePath);
+            dicAvsContents.Add("SetMemoryMax", 256);
+            dicAvsContents.Add("DGDecode_MPEG2Source", strFileName + ".d2v");
+            dicAvsContents.Add("WavSource", strFileName + ".wav");
+            dicAvsContents.Add("interlaced", true);
 
             StreamWriter swAvs = new StreamWriter(strAvsName, isGLRenewDocument);
 
             swAvs.WriteLine("SetMemoryMax(" + dicAvsContents["SetMemoryMax"] + ")");
             swAvs.WriteLine("LoadPlugin(" + "\"" + dicAvsContents["LoadPlugin"] + "\"" + ")");
+            swAvs.WriteLine("vSrc = DGDecode_MPEG2Source(" + "\"" + dicAvsContents["DGDecode_MPEG2Source"] + "\")");
+            swAvs.WriteLine("vSrc = KillAudio(vSrc)");
+            swAvs.WriteLine("aSrc = WavSource(" + "\"" + dicAvsContents["WavSource"] + "\")");
+            swAvs.WriteLine("aSrc = KillVideo(aSrc)");
+            swAvs.WriteLine("AudioDubEx(vSrc,aSrc)");
+            swAvs.WriteLine("ConvertToYUY2(interlaced = " + dicAvsContents["interlaced"] + ")");
+
+            swAvs.Close();
+
+            MyErrorHandling.showInfoMessage("avsの作成が完了しました");
         }
     }
 }
