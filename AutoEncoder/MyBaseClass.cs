@@ -39,6 +39,17 @@ namespace AutoEncoder
 
         #endregion
 
+        #region Library.config
+
+        // 第一階層
+        protected const string LIB_DG_DECODE = "DgDecode";
+        protected const string LIB_LOGO_DATA = "LogoData";
+
+        // 第二階層
+        protected const string LIB_NODE_PATH = "Path";
+
+        #endregion
+
         #endregion
 
         #region グローバル変数の定義
