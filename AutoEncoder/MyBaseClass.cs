@@ -17,12 +17,19 @@ namespace AutoEncoder
         protected const string EP_APP_DG_INDEX = "DgIndex";
         protected const string EP_APP_TO_WAVE = "ToWave";
         protected const string EP_APP_TS2AAC = "Ts2Aac";
+        protected const string EP_APP_CHAPTER_EXE = "ChapterExe";
 
         // 第二階層
         protected const string EP_NODE_PATH = "Path";
         protected const string EP_NODE_OPTION = "Option";
-        protected const string EP_NODE_INPUT_EXT = "InputExt";
-        protected const string EP_NODE_OUTPUT_EXT = "OutputExt";
+        protected const string EP_NODE_INPUT = "Input";
+        protected const string EP_NODE_OUTPUT = "Output";
+
+        // 第三階層
+        protected const string EP_NODE_FILE_ARG = "FileArg";
+
+        // 属性
+        protected const string EP_ATTRIBUTE_FILE_EXT = "Ext";
 
         #endregion
 
@@ -87,12 +94,12 @@ namespace AutoEncoder
 
             // 録画ファイルを保存しているディレクトリのパス
             strGLRecDir = Path.Combine(Program.strGLCurrentDirectory
-                , MyReadConfig.readConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_REC)
+                , MyReadConfig.ReadConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_REC)
                 );
 
             // 作業用一時ファイルを置くディレクトリのパス
             strGLWorkDir = Path.Combine(Program.strGLCurrentDirectory
-                , MyReadConfig.readConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_WORK)
+                , MyReadConfig.ReadConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_WORK)
                 );
 
             // 録画ディレクトリの中の.tsファイルをすべて配列に登録

@@ -80,17 +80,29 @@ namespace AutoEncoder
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
                 Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, strGLFileName, strGLFileName, taskTsToAAC, null);
 
+                // avsファイルを作成する
                 Action<Task> action = (Action<Task>)delegate{ myMakeConfig.makeAvs(strGLFileName); };
-                taskToWave.ContinueWith(action);
-            }
+                Task taskMakeAAC = taskToWave.ContinueWith(action);
+
+                // chapter_exeでavsファイルを読み込み、無音空間のフレームを検出したテキストファイルを出力する
+                Task taskChapterExe = TaskExtAppExecute(EP_APP_CHAPTER_EXE, strGLFileName, strGLFileName, taskMakeAAC, null);
+
+                //// logoframe.exeでavsファイルを読み込み、ロゴが出現している区間のフレームを取得
+                //Task taskLogoFrame = TaskExtAppExecute()
+
+                //// join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、
+                //// ロゴが出現/消滅した付近のフレームを取得
+                //Task taskJoinLogo = TaskExtAppExecute()
+
+            }   
         }
         #endregion
 
         #region Private
         /// <summary>
-        /// 非同期処理にてタスクを開始する（一番最初の非同期処理）
-        /// タスク内容：各外部アプリケーションにファイルと引数を渡し、ファイルを出力させる
-        /// 外部アプリケーションの出力したメッセージはイベントハンドラにて捕捉、フォームに出力させる
+        /// <para>非同期処理にてタスクを開始する（一番最初の非同期処理）</para>
+        /// <para>タスク内容：各外部アプリケーションにファイルと引数を渡し、ファイルを出力させる</para>
+        /// <para>外部アプリケーションの出力したメッセージはイベントハンドラにて捕捉、フォームに出力させる</para>
         /// </summary>
         /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
@@ -163,7 +175,7 @@ namespace AutoEncoder
             {
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
 
-                myExtApplication.runExternalApp(strAppName, strInputFileName, strOutputFileName);
+                myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
             };
 
             return actFirst;
@@ -183,14 +195,15 @@ namespace AutoEncoder
             {
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
 
-                myExtApplication.runExternalApp(strAppName, strInputFileName, strOutputFileName);
+                myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
             };
 
             return actFirst;
         }
 
         /// <summary>
-        /// 外部アプリケーションの処理終了を待ってから行う処理
+        /// <para>外部アプリケーションの処理終了を待ってから行う処理。</para>
+        /// <para>第二引数がnullの場合はアプリケーション実行完了メッセージのみを出力</para>
         /// </summary>
         /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>

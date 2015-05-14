@@ -6,3 +6,5 @@
 *.ini
 *.exe
 *.dll
+*.lgd
+*.aui

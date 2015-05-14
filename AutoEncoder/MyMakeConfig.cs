@@ -22,7 +22,7 @@ namespace AutoEncoder
             Dictionary<string, object> dicAvsContents = new Dictionary<string,object>();
 
             // DGDecode.dllのパス
-            string strDgDecodePath = Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.readConfig(strGLConfigLibraryPath, "DgDecode", "Path"));
+            string strDgDecodePath = Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, "DgDecode", "Path"));
 
             dicAvsContents.Add("LoadPlugin", strDgDecodePath);
             dicAvsContents.Add("SetMemoryMax", 256);

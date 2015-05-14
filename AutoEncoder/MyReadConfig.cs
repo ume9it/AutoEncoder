@@ -17,7 +17,7 @@ namespace AutoEncoder
         /// <param name="strElementName">1階層目の要素名</param>
         /// <param name="strNodeName">strElementNameに属する2階層目の要素名</param>
         /// <returns>抽出したデータ</returns>
-        public static string readConfig(string strXmlName, string strElementName, string strNodeName)
+        public static string ReadConfig(string strXmlName, string strElementName, string strNodeName)
         {
             string strXmlPath = String.Empty;
 
@@ -40,6 +40,56 @@ namespace AutoEncoder
             }
 
             return strXmlPath;
+        }
+
+        /// <summary>
+        /// xmlの第二階層の要素の列挙体を取得する
+        /// </summary>
+        /// <param name="strXmlName">XMLのファイルパス</param>
+        /// <param name="strFirstElement">第一階層の要素名</param>
+        /// <param name="strSecondElement">第二階層の要素名</param>
+        /// <returns>第二階層の要素の列挙体</returns>
+        public static IEnumerable<XElement> GetConfigXElement(string strXmlName, string strFirstElement, string strSecondElement)
+        {
+            // 戻り値の列挙体を定義
+            IEnumerable<XElement> enumXElement = null;
+
+            // XML形式の文書を読み込む
+            XDocument xdoc = XDocument.Load(strXmlName);
+
+            // XMLから要素を取得する
+            enumXElement = xdoc
+                .Root
+                .Elements(strFirstElement)
+                .Descendants(strSecondElement);
+
+            return enumXElement;
+        }
+
+        /// <summary>
+        /// xmlの第三階層の要素の列挙体を取得する
+        /// </summary>
+        /// <param name="strXmlName">XMLのファイルパス</param>
+        /// <param name="strFirstElement">第一階層の要素名</param>
+        /// <param name="strSecondElement">第二階層の要素名</param>
+        /// <param name="strThirdElement">第三階層の要素名</param>
+        /// <returns>第三階層の要素の列挙体</returns>
+        public static IEnumerable<XElement> GetConfigXElement(string strXmlName, string strFirstElement, string strSecondElement, string strThirdElement)
+        {
+            // 戻り値の列挙体を定義
+            IEnumerable<XElement> enumXElement = null;
+
+            // XML形式の文書を読み込む
+            XDocument xdoc = XDocument.Load(strXmlName);
+
+            // XMLから要素を取得する
+            enumXElement = xdoc
+                .Root
+                .Elements(strFirstElement)
+                .Elements(strSecondElement)
+                .Descendants(strThirdElement);
+
+            return enumXElement;
         }
     }
 }
