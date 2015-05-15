@@ -13,8 +13,10 @@ namespace AutoEncoder
     public partial class MainForm : Form
     {
         public static MainForm mainForm;
+        public static TextBox processDialog;
+        public static Label processStatus;
+        public static ProgressBar processProgress;
 
-        TextBox processDialog;
         MyAutoEncode myAutoEncode;
         MyExtApplication myExt;
 
@@ -24,12 +26,6 @@ namespace AutoEncoder
         public MainForm()
         {
             InitializeComponent();
-
-            myAutoEncode = new MyAutoEncode();
-            myExt = new MyExtApplication();
-            mainForm = this;
-
-            processDialog = this.ProcessDialogTextBox;
         }
 
         /// <summary>
@@ -39,6 +35,26 @@ namespace AutoEncoder
         public static MainForm GetInstance()
         {
             return mainForm;
+        }
+
+        /// <summary>
+        /// フォームロード時の初期設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            myAutoEncode = new MyAutoEncode();
+            myExt = new MyExtApplication();
+            mainForm = this;
+
+            processDialog = this.ProcessDialogTextBox;
+            processStatus = this.ProcessStatusLabel;
+            processProgress = this.ProcessProgressBar;
+            
+            // プログレスバーを初期値に設定
+            processProgress.Maximum = 5;
+            processProgress.Minimum = 0;
         }
 
         /// <summary>
@@ -63,9 +79,69 @@ namespace AutoEncoder
         /// </summary>
         /// <param name="text"></param>
         /// <param name="textBox"></param>
-        private void AddText(string text, TextBox textBox)
+        public void AddText(string text, TextBox textBox)
         {
             textBox.AppendText(text + "\r\n");
+        }
+
+        /// <summary>
+        /// ラベルに文字を表示
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="textBox"></param>
+        public void UpdateLabel(string text, Label label)
+        {
+            label.Text = text;
+        }
+
+        /// <summary>
+        /// プログレスバーを1進める
+        /// </summary>
+        /// <param name="progress">プログレスバー</param>
+        public void AddProgressBar(ProgressBar progress)
+        {
+            progress.Value++;
+        }
+
+        /// <summary>
+        /// 外部メソッドからテキストボックスを操作する（文字列表示）
+        /// </summary>
+        /// <param name="strMessage">表示するメッセージの内容</param>
+        public void InvokeAddText(Action<string, TextBox> controlModifier, string strMessage, TextBox textBox)
+        {
+            InvokeIfRequired(
+                (Action)delegate()
+                {
+                    controlModifier(strMessage, textBox);
+                }, true);
+        }
+
+        /// <summary>
+        /// 外部メソッドからラベルを操作する（文字列表示）
+        /// </summary>
+        /// <param name="strMessage">表示するメッセージの内容</param>
+        public void InvokeAddText(Action<string, Label> controlModifier, string strMessage, Label label)
+        {
+            InvokeIfRequired(
+                (Action)delegate()
+                {
+                    controlModifier(strMessage, label);
+                }, true);
+        }
+
+        /// <summary>
+        /// 外部メソッドからプログレスバーを動かす
+        /// </summary>
+        /// <param name="controlModifier"></param>
+        /// <param name="intProgress"></param>
+        /// <param name="progress"></param>
+        public void InvokeAddProgress (Action<ProgressBar> controlModifier, ProgressBar progress)
+        {
+            InvokeIfRequired(
+                (Action)delegate()
+                {
+                    controlModifier(progress);
+                }, true);
         }
 
         /// <summary>
@@ -87,11 +163,6 @@ namespace AutoEncoder
                         AddText(e.Data, processDialog);
                     }, true);
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
         }
 
         private void ProcessDialogTextBox_TextChanged(object sender, EventArgs e)

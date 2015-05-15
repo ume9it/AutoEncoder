@@ -9,6 +9,9 @@ namespace AutoEncoder
 {
     class MyBaseClass
     {
+        protected MyExtApplication myExtApplication;
+        protected MyMakeConfig myMakeConfig;
+
         #region 定数
 
         #region ExePath.config
@@ -18,6 +21,7 @@ namespace AutoEncoder
         protected const string EP_APP_TO_WAVE = "ToWave";
         protected const string EP_APP_TS2AAC = "Ts2Aac";
         protected const string EP_APP_CHAPTER_EXE = "ChapterExe";
+        protected const string EP_APP_LOGO_FRAME = "LogoFrame";
 
         // 第二階層
         protected const string EP_NODE_PATH = "Path";
@@ -54,6 +58,10 @@ namespace AutoEncoder
 
         // 第二階層
         protected const string LIB_NODE_PATH = "Path";
+        protected const string LIB_NODE_FILE = "File";
+
+        // 属性
+        protected const string LIB_ATTRIBUTE_FILE_EXT = "Ext";
 
         #endregion
 

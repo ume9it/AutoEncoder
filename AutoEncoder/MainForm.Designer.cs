@@ -30,11 +30,13 @@
         {
             this.button1 = new System.Windows.Forms.Button();
             this.ProcessDialogTextBox = new System.Windows.Forms.TextBox();
+            this.ProcessStatusLabel = new System.Windows.Forms.Label();
+            this.ProcessProgressBar = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(594, 384);
+            this.button1.Location = new System.Drawing.Point(619, 471);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(94, 44);
             this.button1.TabIndex = 0;
@@ -46,23 +48,41 @@
             // 
             this.ProcessDialogTextBox.AcceptsReturn = true;
             this.ProcessDialogTextBox.AcceptsTab = true;
-            this.ProcessDialogTextBox.Location = new System.Drawing.Point(53, 62);
+            this.ProcessDialogTextBox.Location = new System.Drawing.Point(53, 51);
             this.ProcessDialogTextBox.Multiline = true;
             this.ProcessDialogTextBox.Name = "ProcessDialogTextBox";
             this.ProcessDialogTextBox.ReadOnly = true;
             this.ProcessDialogTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ProcessDialogTextBox.Size = new System.Drawing.Size(635, 293);
+            this.ProcessDialogTextBox.Size = new System.Drawing.Size(660, 293);
             this.ProcessDialogTextBox.TabIndex = 1;
             this.ProcessDialogTextBox.TextChanged += new System.EventHandler(this.ProcessDialogTextBox_TextChanged);
             // 
-            // Form1
+            // ProcessStatusLabel
+            // 
+            this.ProcessStatusLabel.AutoSize = true;
+            this.ProcessStatusLabel.Location = new System.Drawing.Point(51, 471);
+            this.ProcessStatusLabel.Name = "ProcessStatusLabel";
+            this.ProcessStatusLabel.Size = new System.Drawing.Size(175, 36);
+            this.ProcessStatusLabel.TabIndex = 2;
+            this.ProcessStatusLabel.Text = "アプリケーションは起動されていません\r\n\r\n合計起動時間：";
+            // 
+            // ProcessProgressBar
+            // 
+            this.ProcessProgressBar.Location = new System.Drawing.Point(53, 390);
+            this.ProcessProgressBar.Name = "ProcessProgressBar";
+            this.ProcessProgressBar.Size = new System.Drawing.Size(660, 30);
+            this.ProcessProgressBar.TabIndex = 3;
+            // 
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(752, 468);
+            this.ClientSize = new System.Drawing.Size(767, 556);
+            this.Controls.Add(this.ProcessProgressBar);
+            this.Controls.Add(this.ProcessStatusLabel);
             this.Controls.Add(this.ProcessDialogTextBox);
             this.Controls.Add(this.button1);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
@@ -74,6 +94,8 @@
 
         private System.Windows.Forms.Button button1;
         public System.Windows.Forms.TextBox ProcessDialogTextBox;
+        public System.Windows.Forms.Label ProcessStatusLabel;
+        public System.Windows.Forms.ProgressBar ProcessProgressBar;
     }
 }
 
