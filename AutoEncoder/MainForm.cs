@@ -53,7 +53,7 @@ namespace AutoEncoder
             processProgress = this.ProcessProgressBar;
             
             // プログレスバーを初期値に設定
-            processProgress.Maximum = 5;
+            processProgress.Maximum = 6;
             processProgress.Minimum = 0;
         }
 
@@ -95,12 +95,12 @@ namespace AutoEncoder
         }
 
         /// <summary>
-        /// プログレスバーを1進める
+        /// プログレスバーを進める
         /// </summary>
         /// <param name="progress">プログレスバー</param>
-        public void AddProgressBar(ProgressBar progress)
+        public void AddProgressBar(int intProgress, ProgressBar progress)
         {
-            progress.Value++;
+            progress.Value += intProgress;
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace AutoEncoder
         /// 外部メソッドからラベルを操作する（文字列表示）
         /// </summary>
         /// <param name="strMessage">表示するメッセージの内容</param>
-        public void InvokeAddText(Action<string, Label> controlModifier, string strMessage, Label label)
+        public void InvokeUpdateLabel(Action<string, Label> controlModifier, string strMessage, Label label)
         {
             InvokeIfRequired(
                 (Action)delegate()
@@ -135,12 +135,12 @@ namespace AutoEncoder
         /// <param name="controlModifier"></param>
         /// <param name="intProgress"></param>
         /// <param name="progress"></param>
-        public void InvokeAddProgress (Action<ProgressBar> controlModifier, ProgressBar progress)
+        public void InvokeAddProgress (Action<int, ProgressBar> controlModifier, int intProgress, ProgressBar progress)
         {
             InvokeIfRequired(
                 (Action)delegate()
                 {
-                    controlModifier(progress);
+                    controlModifier(intProgress, progress);
                 }, true);
         }
 

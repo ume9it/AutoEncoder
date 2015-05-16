@@ -58,9 +58,7 @@ namespace AutoEncoder
 
             taskAfterExecute dlgAfterTsToAAC = new taskAfterExecute(RenameAAC);
 
-            // デバッグ用
-            //tsToD2V();
-            //tsToAAC();
+            taskAfterExecute dlgAfterJoinLogo = new taskAfterExecute(AddTrimDataToAVS);
 
             foreach (string tsFilePath in lstGLTsFiles)
             {
@@ -73,7 +71,7 @@ namespace AutoEncoder
                 File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLFileName + ".ts");
 
                 // DGIndex.exeでTSをD2Vに
-                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, new string[] {Path.Combine(strGLWorkDir, strGLFileName)}, strGLFileName, dlgAfterTsToD2V);
+                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, dlgAfterTsToD2V);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
                 Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, taskTsToD2V, dlgAfterTsToAAC);
@@ -82,7 +80,7 @@ namespace AutoEncoder
                 Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, taskTsToAAC, null);
 
                 // avsファイルを作成する
-                Action<Task> action = (Action<Task>)delegate{ myMakeConfig.makeAvs(strGLFileName); };
+                Action<Task> action = (Action<Task>)delegate { myMakeConfig.makeAvs(strGLFileName); };
                 Task taskMakeAAC = taskToWave.ContinueWith(action);
 
                 // chapter_exeでavsファイルを読み込み、無音空間のフレームを検出したテキストファイルを出力する
@@ -95,9 +93,15 @@ namespace AutoEncoder
                     , strGLFileName
                     , taskChapterExe, null);
 
-                //// join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、
-                //// ロゴが出現/消滅した付近のフレームを取得
-                //Task taskJoinLogo = TaskExtAppExecute()
+                // join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、
+                // ロゴが出現/消滅した付近のフレームを取得
+                Task taskJoinLogo = TaskExtAppExecute(
+                    EP_APP_JOIN_LOGO
+                    , new string[] { Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_JOIN_LOGO_CONIFG, LIB_NODE_PATH)) }
+                    , strGLFileName
+                    , taskLogoFrame
+                    , dlgAfterJoinLogo
+                    );
 
             }   
         }
@@ -110,7 +114,7 @@ namespace AutoEncoder
         /// <para>外部アプリケーションの出力したメッセージはイベントハンドラにて捕捉、フォームに出力させる</para>
         /// </summary>
         /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
-        /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
+        /// <param name="strInputFileName">入力ファイル名の配列（パスと拡張子を除いたファイルの名前、%~nと同義、配列の先頭から第一引数のファイル、第二引数・・・となる）</param>
         /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
         /// <returns>この非同期処理のタスクのオブジェクト</returns>
@@ -178,37 +182,20 @@ namespace AutoEncoder
         {
             Action actFirst = (Action)delegate
             {
-                mainForm.InvokeAddText(
-                    (Action<string, TextBox>)mainForm.AddText
-                    , strAppName + "の処理を開始します。"
-                    , mainForm.ProcessDialogTextBox
+                mainForm.InvokeUpdateLabel(
+                    (Action<string, Label>)mainForm.UpdateLabel
+                    , strAppName + "の処理を実行中です。"
+                    , mainForm.ProcessStatusLabel
                     );
 
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
                 System.Diagnostics.Process process = myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
 
-                while(!process.HasExited)
-                {
-                    System.Threading.Thread.Sleep(1000);
-                    mainForm.InvokeAddText(
-                        (Action<string, Label>)mainForm.UpdateLabel
-                        , strAppName + "の処理が実行中です。\r\n\r\n合計起動時間：" + process.TotalProcessorTime.ToString(@"hh\:mm\:ss")
-                        , mainForm.ProcessStatusLabel
-                        );
-                }
+                // プロセスが終了するまで待機する処理＆待機中に行う処理
+                process = ProcessWait(process);
 
-                mainForm.InvokeAddProgress(
-                    (Action<ProgressBar>)mainForm.AddProgressBar
-                    , mainForm.ProcessProgressBar
-                    );
-
-                mainForm.InvokeAddText(
-                    (Action<string, Label>)mainForm.UpdateLabel
-                    , strAppName + "の処理が終了しました。\r\n\r\n合計起動時間：" + process.TotalProcessorTime.ToString(@"hh\:mm\:ss")
-                    , mainForm.ProcessStatusLabel
-                    );
-
-                process.Dispose();
+                // プロセスが終了した後に行う処理
+                ProcessEnd();
             };
 
             return actFirst;
@@ -227,46 +214,27 @@ namespace AutoEncoder
             Action<Task> actFirst = (Action<Task>)delegate
             {
                 // テキストボックスに処理のログを表示
-                mainForm.InvokeAddText(
-                    (Action<string, TextBox>)mainForm.AddText
-                    , strAppName + "の処理を開始します。"
-                    , mainForm.ProcessDialogTextBox
-                    );
+                mainForm.InvokeUpdateLabel(
+                    (Action<string, Label>)mainForm.UpdateLabel
+                    , strAppName + "の処理を実行中です。"
+                    , mainForm.ProcessStatusLabel
+                     );
 
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
                 System.Diagnostics.Process process = myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
 
-                while (!process.HasExited)
-                {
-                    System.Threading.Thread.Sleep(1000);
+                // プロセスが終了するまで待機する処理＆待機中に行う処理
+                process = ProcessWait(process);
 
-                    // ラベルにプロセスの待ち時間を表示
-                    mainForm.InvokeAddText(
-                        (Action<string, Label>)mainForm.UpdateLabel
-                        , strAppName + "の処理が実行中です。\r\n\r\n合計起動時間：" + process.TotalProcessorTime.ToString(@"hh\:mm\:ss")
-                        , mainForm.ProcessStatusLabel
-                        );
-                }
-
-                mainForm.InvokeAddProgress(
-                    (Action<ProgressBar>)mainForm.AddProgressBar
-                    , mainForm.ProcessProgressBar
-                    );
-
-                mainForm.InvokeAddText(
-                    (Action<string, Label>)mainForm.UpdateLabel
-                    , strAppName + "の処理が終了しました。\r\n\r\n合計起動時間：" + process.TotalProcessorTime.ToString(@"hh\:mm\:ss")
-                    , mainForm.ProcessStatusLabel
-                    );
-
-                process.Dispose();
+                // プロセスが終了した後に行う処理
+                ProcessEnd();
             };
 
             return actFirst;
         }
 
         /// <summary>
-        /// <para>外部アプリケーションの処理終了を待ってから行う処理。</para>
+        /// <para>外部アプリケーションの処理終了を待ってから行うそのアプリケーションに付随する処理。</para>
         /// <para>第二引数がnullの場合はアプリケーション実行完了メッセージのみを出力</para>
         /// </summary>
         /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
@@ -276,10 +244,10 @@ namespace AutoEncoder
         {
             Action<Task> actNext = (Action<Task>)delegate
             {
-                mainForm.InvokeAddText(
-                    (Action<string, TextBox>)mainForm.AddText
+                mainForm.InvokeUpdateLabel(
+                    (Action<string, Label>)mainForm.UpdateLabel
                     , strAppName + "の処理が終了しました。"
-                    , mainForm.ProcessDialogTextBox
+                    , mainForm.ProcessStatusLabel
                      );
 
                 if (dlgTaskAfter != null)
@@ -290,6 +258,42 @@ namespace AutoEncoder
             };
 
             return actNext;
+        }
+
+        /// <summary>
+        /// プロセスが処理を終了するまで永続的に行う処理
+        /// </summary>
+        /// <param name="processWaitFor">処理を待つプロセスのオブジェクト</param>
+        /// <returns>プロセスのオブジェクト</returns>
+        private System.Diagnostics.Process ProcessWait(System.Diagnostics.Process processWaitFor)
+        {
+            while (!processWaitFor.HasExited)
+            {
+                // 1秒待つ
+                System.Threading.Thread.Sleep(1000);
+
+                // メインフォームのラベルに実行中メッセージと、プロセスの合計起動時間（待ち時間）を表示
+                mainForm.InvokeUpdateLabel(
+                    (Action<string, Label>)mainForm.UpdateLabel
+                    , "合計起動時間：" + processWaitFor.TotalProcessorTime.ToString(@"hh\:mm\:ss")
+                    , mainForm.TotalProcessorTimeLabel
+                    );
+            }
+
+            return processWaitFor;
+        }
+
+        /// <summary>
+        /// プロセスが処理を終了した後の処理
+        /// </summary>
+        private void ProcessEnd()
+        {
+            // プログレスバーを１進める
+            mainForm.InvokeAddProgress(
+                (Action<int, ProgressBar>)mainForm.AddProgressBar
+                , 1
+                , mainForm.ProcessProgressBar
+                );
         }
 
         /// <summary>
@@ -309,14 +313,10 @@ namespace AutoEncoder
         /// <summary>
         /// ts2aac.exeが生成したaacファイルの名前を変更
         /// </summary>
-        /// <param name="strGLFileName">もともとのファイル名</param>
         private void RenameAAC()
         {
             // 正規表現
-            Regex regex = new Regex(@" PID 0x112 DELAY " + @".+ms\.aac");
-
-            var aaa = Directory.GetFiles(strGLWorkDir);
-            var ttt = aaa[0].Split('.');
+            Regex regex = new Regex(@" PID [0-9]x[0-9]{3} DELAY .*[0-9]+ms\.aac");
 
             // 正規表現にマッチするaacファイルを検索
             IEnumerable<string> strRenameAac = Directory
@@ -325,12 +325,31 @@ namespace AutoEncoder
                 .Where(aacFile => regex.IsMatch(aacFile))
                 .Select(item => item);
 
-            var bbb = strRenameAac.First();
+            if (strRenameAac.Any())
+            {
+                string strOldAAC = strRenameAac.First();
 
-            string strNewAacName = Path.Combine(strGLWorkDir, strGLFileName + ".aac");
+                string strNewAAC = Path.Combine(strGLWorkDir, strGLFileName + ".aac");
 
-            // ファイル名の余計な文字列を削除
-            File.Move(bbb, strNewAacName);
+                // ファイル名の余計な文字列を削除
+                File.Move(strOldAAC, strNewAAC);
+            }
+        }
+
+        /// <summary>
+        /// CMカット結果をavsファイルに追記する
+        /// </summary>
+        private void AddTrimDataToAVS()
+        {
+            string strAVS = Path.Combine(strGLWorkDir, strGLFileName + ".avs");
+            string strTrimData =  Path.Combine(strGLWorkDir, strGLFileName + "_Trim.txt");
+
+            StreamReader reader = new StreamReader(strTrimData);
+
+            using (StreamWriter writer = new StreamWriter(strAVS, true))
+            {
+                writer.Write(reader.ReadToEnd());
+            }
         }
         #endregion
     }

@@ -22,6 +22,7 @@ namespace AutoEncoder
         protected const string EP_APP_TS2AAC = "Ts2Aac";
         protected const string EP_APP_CHAPTER_EXE = "ChapterExe";
         protected const string EP_APP_LOGO_FRAME = "LogoFrame";
+        protected const string EP_APP_JOIN_LOGO = "JoinLogo";
 
         // 第二階層
         protected const string EP_NODE_PATH = "Path";
@@ -55,6 +56,7 @@ namespace AutoEncoder
         // 第一階層
         protected const string LIB_DG_DECODE = "DgDecode";
         protected const string LIB_LOGO_DATA = "LogoData";
+        protected const string LIB_JOIN_LOGO_CONIFG = "JoinLogoConfig";
 
         // 第二階層
         protected const string LIB_NODE_PATH = "Path";
