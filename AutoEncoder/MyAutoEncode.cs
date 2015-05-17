@@ -93,8 +93,7 @@ namespace AutoEncoder
                     , strGLFileName
                     , taskChapterExe, null);
 
-                // join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、
-                // ロゴが出現/消滅した付近のフレームを取得
+                // join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、ロゴが出現/消滅した付近のフレームを取得
                 Task taskJoinLogo = TaskExtAppExecute(
                     EP_APP_JOIN_LOGO
                     , new string[] { Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_JOIN_LOGO_CONIFG, LIB_NODE_PATH)) }
@@ -103,6 +102,11 @@ namespace AutoEncoder
                     , dlgAfterJoinLogo
                     );
 
+                // AviutlでCMカット情報が記載されたavsをもとに動画をmp4へエンコードする
+
+                // ffmpegでtsのCMカットを行う（無圧縮、動画の切り抜き＋結合をするだけ）
+
+                // 出力した.ts、.mp4ファイルを指定フォルダへ保存＆リネーム（指定フォルダが存在しない場合は作成）
             }   
         }
         #endregion

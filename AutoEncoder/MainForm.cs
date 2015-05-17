@@ -55,6 +55,8 @@ namespace AutoEncoder
             // プログレスバーを初期値に設定
             processProgress.Maximum = 6;
             processProgress.Minimum = 0;
+
+            MyTsCut myTsCut = new MyTsCut();
         }
 
         /// <summary>
