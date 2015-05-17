@@ -56,7 +56,6 @@ namespace AutoEncoder
             processProgress.Maximum = 6;
             processProgress.Minimum = 0;
 
-            MyTsCut myTsCut = new MyTsCut();
         }
 
         /// <summary>
