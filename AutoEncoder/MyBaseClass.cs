@@ -73,61 +73,34 @@ namespace AutoEncoder
 
         // 成否を管理するフラグ
         protected bool bolGLResultFlag = true;
-        protected bool isProcessEnd = false; 
+        protected bool isProcessEnd = false;
 
-        protected string strGLFileName;
-        protected string strGLConfigExePath;
-        protected string strGLConfigLibraryPath;
-        protected string strGLConfigAutoEncodePath;
-        protected string strGLRecDir;
-        protected string strGLWorkDir;
-        protected List<string> lstGLFileFullPath;
-        protected List<string> lstGLTsFiles;
+        // ExePath.configのファイルパス
+        protected static string strGLConfigExePath =
+            Path.Combine(Program.CurrentDirectory, "ExePath.config");
 
-        #endregion
+        protected static string strGLConfigLibraryPath =
+            Path.Combine(Program.CurrentDirectory, "Library.config");
 
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
-        public MyBaseClass()
-        {
-            #region グローバル変数に値を設定
+        protected static string strGLConfigAutoEncodePath =
+            Path.Combine(Program.CurrentDirectory, "AutoEncode.config");
 
-            // ExePath.configのファイルパス
-            strGLConfigExePath = Program.strGLCurrentDirectory + @"\ExePath.config";
-
-            // Library.configのファイルパス
-            strGLConfigLibraryPath = Program.strGLCurrentDirectory + @"\Library.config";
-
-            // AutoEncode.configのファイルパス
-            strGLConfigAutoEncodePath = Program.strGLCurrentDirectory + @"\AutoEncode.config";
-
-            // 録画ファイルを保存しているディレクトリのパス
-            strGLRecDir = Path.Combine(Program.strGLCurrentDirectory
+        // 録画ファイルを保存しているディレクトリのパス
+        protected static string strGLRecDir =
+            Path.Combine(Program.CurrentDirectory
                 , MyReadConfig.ReadConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_REC)
                 );
 
-            // 作業用一時ファイルを置くディレクトリのパス
-            strGLWorkDir = Path.Combine(Program.strGLCurrentDirectory
+        // 作業用一時ファイルを置くディレクトリのパス
+        protected static string strGLWorkDir =
+            Path.Combine(Program.CurrentDirectory
                 , MyReadConfig.ReadConfig(strGLConfigAutoEncodePath, AE_DIR, AE_NODE_WORK)
                 );
 
-            // 録画ディレクトリの中の.tsファイルをすべて配列に登録
-            lstGLFileFullPath = Directory
-                .GetFiles(strGLRecDir)
-                .Where(dirFile => dirFile.Split('.').Last() == "ts")
-                .Select(tsFile => tsFile)
-                .ToList();
+        #endregion
 
-            // 登録した.tsファイルの拡張子・パスを除いて名前だけにする
-            lstGLTsFiles = lstGLFileFullPath
-                .Select(tsFile => tsFile
-                    .Split('\\').Last()
-                    .Split('.').First()
-                )
-                .ToList();
-
-            #endregion
-        }
+        protected SearchDirFiles tsFiles = new SearchDirFiles(strGLRecDir, ".ts");
+        protected string strInputFile = null;
+        protected string strInputFileWithoutExtension = null;
     }
 }

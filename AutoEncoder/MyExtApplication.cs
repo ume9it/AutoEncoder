@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Windows.Forms;
-using System.Reflection;
-using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace AutoEncoder
 {
@@ -18,36 +11,24 @@ namespace AutoEncoder
 
         /// <summary>
         /// 外部アプリケーションを起動するためのプロセスを作成し、コマンドライン引数を渡した状態で起動する
-        /// （カレントディレクトリ内のアプリケーション）
-        /// </summary>
-        /// <param name="strAppName">アプリケーション名</param>
-        /// <param name="strAppArg">コマンドライン引数</param>
-        /// <returns>外部アプリケーションの標準出力</returns>
-        public System.Diagnostics.Process ProcessStart(string strAppName, string strAppArg = "")
-        {
-            return ProcessStart(strAppName, Program.strGLCurrentDirectory, strAppArg);
-        }
-
-        /// <summary>
-        /// 外部アプリケーションを起動するためのプロセスを作成し、コマンドライン引数を渡した状態で起動する
         /// （アプリケーションのディレクトリを指定して起動）
         /// </summary>
         /// <param name="strAppName">アプリケーション名</param>
         /// <param name="strAppDir">アプリケーションの格納されているディレクトリ</param>
         /// <param name="strAppArg">コマンドライン引数</param>
         /// <returns>外部アプリケーションの標準出力</returns>
-        public System.Diagnostics.Process ProcessStart(string strAppName, string strAppDir, string strAppArg = "")
+        public Process ProcessStart(ExternalAppSettings setting)
         {
             // プロセスのオブジェクトを作成
-            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            Process process = new Process();
 
             try
             {
                 // 外部アプリケーションをプロセスのオブジェクトに関連付ける
-                process.StartInfo.FileName = Path.Combine(strAppDir, strAppName);
+                process.StartInfo.FileName = setting.AppRoot;
 
                 // プロセスに渡す引数を設定
-                process.StartInfo.Arguments = strAppArg;
+                process.StartInfo.Arguments = setting.ArgumentString;
 
                 // 標準出力を受け取る設定
                 process.StartInfo.RedirectStandardOutput = true;
@@ -56,7 +37,7 @@ namespace AutoEncoder
                 process.StartInfo.UseShellExecute = false;
 
                 // ウインドウを隠すかどうかの設定
-                process.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
                 // 外部アプリケーションの画面を非表示（GUIがない場合）
                 process.StartInfo.CreateNoWindow = true;
@@ -76,70 +57,6 @@ namespace AutoEncoder
             }
 
             return process;
-        }
-
-        /// <summary>
-        /// 外部アプリケーションを起動するための引数やファイルパスなどを設定し、プロセスの作成メソッドへ値を渡す
-        /// </summary>
-        /// <param name="strAppName">外部アプリケーション名</param>
-        /// <param name="strInputFileName">入力ファイル名（ファイル名のみ）</param>
-        /// <param name="strOutputFileName">出力ファイル名（ファイル名のみ）</param>
-        /// <param name="strArguments">外部アプリケーションに渡す引数</param>
-        /// <returns>アプリケーションの出力したメッセージ</returns>
-        public System.Diagnostics.Process RunExternalApp(string strAppName, string[] strInputFileName, string strOutputFileName)
-        {
-            // 外部アプリケーションのパス
-            string strExtAppPath = MyReadConfig.ReadConfig(strGLConfigExePath, strAppName, EP_NODE_PATH);
-
-            // 外部アプリケーション実行時のオプション（入力、出力以外の引数オプション）
-            string strExtAppStartOption = MyReadConfig.ReadConfig(strGLConfigExePath, strAppName, EP_NODE_OPTION);
-
-            // コマンドライン引数を作成
-            string strArguments = MakeAppArgs(strAppName, strInputFileName, strOutputFileName);
-
-            // 設定したコマンドライン引数を渡して外部アプリケーションを起動
-            return ProcessStart(strExtAppPath, strArguments);
-        }
-
-        /// <summary>
-        /// ExePath.configを読み込み、データを置換・結合し、コマンドライン引数を作成する
-        /// </summary>
-        /// <param name="strAppName">アプリケーション名</param>
-        /// <param name="strInputFileName">入力ファイル名（拡張子を除いたファイルパスの配列）</param>
-        /// <param name="strOutputFileName">出力ファイル名（パス、拡張子を除いたファイル名のみ）</param>
-        /// <returns>各アプリケーションのコマンドライン引数</returns>
-        public string MakeAppArgs(string strAppName, string[] strInputFileName, string strOutputFileName)
-        {
-            IEnumerable<XElement> enumInputElements = MyReadConfig.GetConfigXElement(strGLConfigExePath, strAppName, EP_NODE_INPUT, EP_NODE_FILE_ARG);
-            IEnumerable<XElement> enumOutputElements = MyReadConfig.GetConfigXElement(strGLConfigExePath, strAppName, EP_NODE_OUTPUT, EP_NODE_FILE_ARG);
-            IEnumerable<XElement> enumOptionElements = MyReadConfig.GetConfigXElement(strGLConfigExePath, strAppName, EP_NODE_OPTION);
-
-            string strInputArgs = String.Empty;
-            string strOutputArgs = String.Empty;
-            string strOptionArgs = String.Empty;
-
-            foreach(var xInputItem in enumInputElements.Select((value, count) => new {value, count}))
-            {
-                strInputArgs += xInputItem.value.Value
-                    .Replace("{Input}", strInputFileName[xInputItem.count])
-                    .Replace("{Ext}", xInputItem.value.Attribute(EP_ATTRIBUTE_FILE_EXT).Value);
-            }
-
-            foreach(XElement xOutputItem in enumOutputElements)
-            {
-                strOutputArgs += xOutputItem.Value
-                    .Replace("{Output}", strGLWorkDir + strOutputFileName)
-                    .Replace("{Ext}", xOutputItem.Attribute(EP_ATTRIBUTE_FILE_EXT).Value);
-            }
-
-            foreach (XElement xOptionItem in enumOptionElements)
-            {
-                strOptionArgs += xOptionItem.Value;
-            }
-
-            string strUnionArgument = strInputArgs + strOutputArgs + strOptionArgs;
-
-            return strUnionArgument;
         }
     }
 }

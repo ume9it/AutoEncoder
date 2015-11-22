@@ -8,7 +8,7 @@ namespace AutoEncoder
 {
     static class Program
     {
-        public static string strGLCurrentDirectory;
+        public static string CurrentDirectory;
 
         /// <summary>
         /// アプリケーションのメイン エントリ ポイントです。
@@ -19,11 +19,11 @@ namespace AutoEncoder
             if (args.Any())
             {
                 // wine対応（wineではカレントディレクトリが正しく認識されないため、渡された引数をプログラムのカレントディレクトリとみなす）
-                strGLCurrentDirectory = args.First();
+                CurrentDirectory = args.First();
             }
             else
             {
-                strGLCurrentDirectory = System.Environment.CurrentDirectory;
+                CurrentDirectory = System.Environment.CurrentDirectory;
             }
 
             Application.EnableVisualStyles();

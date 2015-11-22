@@ -44,7 +44,6 @@ namespace AutoEncoder
         /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
-            myAutoEncode = new MyAutoEncode();
             myExt = new MyExtApplication();
             mainForm = this;
 
@@ -55,7 +54,6 @@ namespace AutoEncoder
             // プログレスバーを初期値に設定
             processProgress.Maximum = 6;
             processProgress.Minimum = 0;
-
         }
 
         /// <summary>
@@ -65,6 +63,7 @@ namespace AutoEncoder
         /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
+            myAutoEncode = new MyAutoEncode();
             try
             {
                 myAutoEncode.EncodeMovie();

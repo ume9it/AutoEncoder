@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.IO;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace AutoEncoder
 {
@@ -16,9 +17,6 @@ namespace AutoEncoder
 
         public static MyAutoEncode myAutoEncode = null;
         MainForm mainForm;
-
-        // 非同期タスクの処理終了後に実行するメソッドを呼び出すためのデリゲート
-        delegate void taskAfterExecute();
 
         #endregion 
 
@@ -54,60 +52,104 @@ namespace AutoEncoder
             // DGIndexの処理終了　→　DGIndexが出力したAACを削除
             // (放送局がTOKYO MXのファイルのAACファイルは壊れているので別途ts2aac.exeにて取得する)
             // 一つのファイルに二つの放送波が混在しているため？
-            taskAfterExecute dlgAfterTsToD2V = new taskAfterExecute(DeleteAAC);
 
-            taskAfterExecute dlgAfterTsToAAC = new taskAfterExecute(RenameAAC);
-
-            taskAfterExecute dlgAfterJoinLogo = new taskAfterExecute(AddTrimDataToAVS);
-
-            foreach (string tsFilePath in lstGLTsFiles)
+            foreach (string tsFile in tsFiles.FileNameWithoutExtension)
             {
                 // 録画ディレクトリ内のTSファイルをそれぞれ処理する
 
                 // グローバル変数に現在処理している.tsファイルを登録
-                strGLFileName = tsFilePath;
+                strInputFile = Path.Combine(strGLWorkDir, tsFile + ".ts");
+                strInputFileWithoutExtension = Path.Combine(strGLWorkDir, tsFile);
 
                 // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
-                File.Move(strGLRecDir + tsFilePath + ".ts", strGLWorkDir + strGLFileName + ".ts");
+                File.Move(strGLRecDir + tsFile + ".ts", strInputFile);
+
+                Dictionary<string, Tuple<List<string>, string>> kvAppInOutTuple = new Dictionary<string, Tuple<List<string>, string>>()
+                {
+                    { EP_APP_DG_INDEX, Tuple.Create(new List<string>(), strInputFileWithoutExtension) }
+                };
 
                 // DGIndex.exeでTSをD2Vに
-                Task taskTsToD2V = TaskExtAppExecute(EP_APP_DG_INDEX, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, dlgAfterTsToD2V);
+                ExternalAppSettings DgIndex =
+                    new ExternalAppSettings(
+                        EP_APP_DG_INDEX
+                        , new List<string>() { strInputFileWithoutExtension }
+                        , strInputFileWithoutExtension
+                    );
+                Task taskTsToD2V = TaskExtAppExecute(DgIndex, DeleteAAC);
 
                 // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
-                Task taskTsToAAC = TaskExtAppExecute(EP_APP_TS2AAC, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, taskTsToD2V, dlgAfterTsToAAC);
+                ExternalAppSettings TsToAAC =
+                    new ExternalAppSettings(
+                        EP_APP_TS2AAC
+                        , new List<string>() { strInputFileWithoutExtension }
+                        , strInputFileWithoutExtension
+                        );
+                Task taskTsToAAC = TaskExtAppExecute(TsToAAC, taskTsToD2V, RenameAAC);
 
                 // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
-                Task taskToWave = TaskExtAppExecute(EP_APP_TO_WAVE, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, taskTsToAAC, null);
+                ExternalAppSettings ToWave =
+                    new ExternalAppSettings(
+                        EP_APP_TO_WAVE
+                        , new List<string>() { strInputFileWithoutExtension }
+                        , strInputFileWithoutExtension
+                        );
+                Task taskToWave = TaskExtAppExecute(ToWave, taskTsToAAC, null);
 
                 // avsファイルを作成する
-                Action<Task> action = (Action<Task>)delegate { myMakeConfig.makeAvs(strGLFileName); };
-                Task taskMakeAAC = taskToWave.ContinueWith(action);
+                Task taskMakeAAC = taskToWave.ContinueWith(
+                    new Action<Task>((task) =>
+                    {
+                        myMakeConfig.MakeAvs(tsFile);
+                    }));
 
                 // chapter_exeでavsファイルを読み込み、無音空間のフレームを検出したテキストファイルを出力する
-                Task taskChapterExe = TaskExtAppExecute(EP_APP_CHAPTER_EXE, new string[] { Path.Combine(strGLWorkDir, strGLFileName) }, strGLFileName, taskMakeAAC, null);
+                ExternalAppSettings ChapterExe =
+                    new ExternalAppSettings(
+                        EP_APP_CHAPTER_EXE
+                        , new List<string>() { strInputFileWithoutExtension }
+                        , strInputFileWithoutExtension
+                        );
+                Task taskChapterExe = TaskExtAppExecute(ChapterExe, taskMakeAAC, null);
 
                 // logoframe.exeでavsファイルを読み込み、ロゴが出現している区間のフレームを取得
-                Task taskLogoFrame = TaskExtAppExecute(
-                    EP_APP_LOGO_FRAME
-                    , new string[] { Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_LOGO_DATA, LIB_NODE_PATH), "TOKYO_MX") }
-                    , strGLFileName
-                    , taskChapterExe, null);
+                ExternalAppSettings LogoFrame =
+                    new ExternalAppSettings(
+                        EP_APP_LOGO_FRAME
+                        , new List<string>()
+                        {
+                            strInputFileWithoutExtension
+                            , Path.Combine(
+                                Program.CurrentDirectory
+                                , MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_LOGO_DATA, LIB_NODE_PATH)
+                                , "TOKYO_MX"
+                            )
+                        }
+                        , strInputFileWithoutExtension
+                        );
+                //Task taskLogoFrame = TaskExtAppExecute(LogoFrame, null);
+                Task taskLogoFrame = TaskExtAppExecute(LogoFrame, taskChapterExe, null);
 
                 // join_logo_scp.exeで、chapter_exeとlogoframeが出力したテキストを読み込み、ロゴが出現/消滅した付近のフレームを取得
-                Task taskJoinLogo = TaskExtAppExecute(
-                    EP_APP_JOIN_LOGO
-                    , new string[] { Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(strGLWorkDir, strGLFileName), Path.Combine(Program.strGLCurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_JOIN_LOGO_CONIFG, LIB_NODE_PATH)) }
-                    , strGLFileName
-                    , taskLogoFrame
-                    , dlgAfterJoinLogo
-                    );
+                ExternalAppSettings JoinLogo =
+                    new ExternalAppSettings(
+                        EP_APP_JOIN_LOGO
+                        , new List<string>()
+                        {
+                            strInputFileWithoutExtension
+                            , strInputFileWithoutExtension
+                            , Path.Combine(Program.CurrentDirectory, MyReadConfig.ReadConfig(strGLConfigLibraryPath, LIB_JOIN_LOGO_CONIFG, LIB_NODE_PATH))
+                        }
+                        , strInputFileWithoutExtension
+                        );
+                Task taskJoinLogo = TaskExtAppExecute(JoinLogo, taskLogoFrame, AddTrimDataToAVS);
 
                 // AviutlでCMカット情報が記載されたavsをもとに動画をmp4へエンコードする
 
                 // ffmpegでtsのCMカットを行う（無圧縮、動画の切り抜き＋結合をするだけ）
 
                 // 出力した.ts、.mp4ファイルを指定フォルダへ保存＆リネーム（指定フォルダが存在しない場合は作成）
-            }   
+            }
         }
         #endregion
 
@@ -122,13 +164,13 @@ namespace AutoEncoder
         /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
         /// <returns>この非同期処理のタスクのオブジェクト</returns>
-        private Task TaskExtAppExecute(string strAppName, string[] strInputFileName, string strOutputFileName, taskAfterExecute dlgTaskAfter)
+        private Task TaskExtAppExecute(ExternalAppSettings setting, Action dlgTaskAfter)
         {
             // 非同期処理１（処理待ちせずに実行）
-            Action actFirst = SetActionFirstExecuteApp(strAppName, strInputFileName, strOutputFileName);
+            Action actFirst = SetActionFirstExecuteApp(setting);
 
             // 非同期処理２（非同期処理１の終了を待ってから実行する）
-            Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
+            Action<Task> actNext = SetActionAfterExecuteApp(setting, dlgTaskAfter);
 
             // 複数の非同期処理の同期処理
             Task taskAsync = 
@@ -154,13 +196,13 @@ namespace AutoEncoder
         /// <param name="taskBefore">この処理の前に行う非同期処理のタスク</param>
         /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
         /// <returns>この非同期処理のタスクのオブジェクト</returns>
-        private Task TaskExtAppExecute(string strAppName, string[] strInputFileName, string strOutputFileName, Task taskBefore, taskAfterExecute dlgTaskAfter)
+        private Task TaskExtAppExecute(ExternalAppSettings setting, Task taskBefore, Action dlgTaskAfter)
         {
             // 非同期処理１（前に起動された非同期処理を待った後に行う）
-            Action<Task> actFirst = SetActionNextExecuteApp(strAppName, strInputFileName, strOutputFileName);
+            Action<Task> actFirst = SetActionNextExecuteApp(setting);
 
             // 非同期処理２（非同期処理１の終了を待ってから実行する）
-            Action<Task> actNext = SetActionAfterExecuteApp(strAppName, dlgTaskAfter);
+            Action<Task> actNext = SetActionAfterExecuteApp(setting, dlgTaskAfter);
 
             // 複数の非同期処理の同期処理
             Task taskAsync =
@@ -182,18 +224,18 @@ namespace AutoEncoder
         /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <returns>Actionオブジェクト</returns>
-        private Action SetActionFirstExecuteApp(string strAppName, string[] strInputFileName, string strOutputFileName)
+        private Action SetActionFirstExecuteApp(ExternalAppSettings setting)
         {
             Action actFirst = (Action)delegate
             {
                 mainForm.InvokeUpdateLabel(
                     (Action<string, Label>)mainForm.UpdateLabel
-                    , strAppName + "の処理を実行中です。"
+                    , setting.AppName + "の処理を実行中です。"
                     , mainForm.ProcessStatusLabel
                     );
 
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
-                System.Diagnostics.Process process = myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
+                System.Diagnostics.Process process = myExtApplication.ProcessStart(setting);
 
                 // プロセスが終了するまで待機する処理＆待機中に行う処理
                 process = ProcessWait(process);
@@ -213,19 +255,19 @@ namespace AutoEncoder
         /// <param name="strInputFileName">入力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="strOutputFileName">出力ファイル名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <returns>Action＜Task＞オブジェクト</returns>
-        private Action<Task> SetActionNextExecuteApp(string strAppName, string[] strInputFileName, string strOutputFileName)
+        private Action<Task> SetActionNextExecuteApp(ExternalAppSettings setting)
         {
             Action<Task> actFirst = (Action<Task>)delegate
             {
                 // テキストボックスに処理のログを表示
                 mainForm.InvokeUpdateLabel(
                     (Action<string, Label>)mainForm.UpdateLabel
-                    , strAppName + "の処理を実行中です。"
+                    , setting.AppName + "の処理を実行中です。"
                     , mainForm.ProcessStatusLabel
                      );
 
                 // 設定したコマンドライン引数を渡して外部アプリケーションを起動
-                System.Diagnostics.Process process = myExtApplication.RunExternalApp(strAppName, strInputFileName, strOutputFileName);
+                System.Diagnostics.Process process = myExtApplication.ProcessStart(setting);
 
                 // プロセスが終了するまで待機する処理＆待機中に行う処理
                 process = ProcessWait(process);
@@ -244,13 +286,13 @@ namespace AutoEncoder
         /// <param name="strAppName">外部アプリケーション名（パスと拡張子を除いたファイルの名前、%~nと同義）</param>
         /// <param name="dlgTaskAfter">外部アプリケーションの処理終了を待ってから行う処理</param>
         /// <returns>Action＜Task＞オブジェクト</returns>
-        private Action<Task> SetActionAfterExecuteApp (string strAppName, taskAfterExecute dlgTaskAfter)
+        private Action<Task> SetActionAfterExecuteApp (ExternalAppSettings setting, Action dlgTaskAfter)
         {
             Action<Task> actNext = (Action<Task>)delegate
             {
                 mainForm.InvokeUpdateLabel(
                     (Action<string, Label>)mainForm.UpdateLabel
-                    , strAppName + "の処理が終了しました。"
+                    , setting.AppName + "の処理が終了しました。"
                     , mainForm.ProcessStatusLabel
                      );
 
@@ -269,7 +311,7 @@ namespace AutoEncoder
         /// </summary>
         /// <param name="processWaitFor">処理を待つプロセスのオブジェクト</param>
         /// <returns>プロセスのオブジェクト</returns>
-        private System.Diagnostics.Process ProcessWait(System.Diagnostics.Process processWaitFor)
+        private Process ProcessWait(Process processWaitFor)
         {
             while (!processWaitFor.HasExited)
             {
@@ -333,7 +375,7 @@ namespace AutoEncoder
             {
                 string strOldAAC = strRenameAac.First();
 
-                string strNewAAC = Path.Combine(strGLWorkDir, strGLFileName + ".aac");
+                string strNewAAC = strInputFileWithoutExtension + ".aac";
 
                 // ファイル名の余計な文字列を削除
                 File.Move(strOldAAC, strNewAAC);
@@ -345,8 +387,8 @@ namespace AutoEncoder
         /// </summary>
         private void AddTrimDataToAVS()
         {
-            string strAVS = Path.Combine(strGLWorkDir, strGLFileName + ".avs");
-            string strTrimData =  Path.Combine(strGLWorkDir, strGLFileName + "_Trim.txt");
+            string strAVS = (strInputFileWithoutExtension + ".avs");
+            string strTrimData =  strInputFileWithoutExtension + "_Trim.txt";
 
             StreamReader reader = new StreamReader(strTrimData);
 
