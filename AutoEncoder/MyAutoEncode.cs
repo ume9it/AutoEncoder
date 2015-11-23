@@ -119,8 +119,12 @@ namespace AutoEncoder
                     },
                     {
                         "AviUtl"
-                        , null
-                            
+                        , new ExternalAppSettings(
+                            "AviUtl"
+                            , strInputFileWithoutExtension
+                            , null
+                            , strInputFileWithoutExtension
+                        )
                     }
                 };
 
