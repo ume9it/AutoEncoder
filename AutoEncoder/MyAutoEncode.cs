@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using NUnit.Framework;
+using System.Threading;
 
 namespace AutoEncoder
 {
@@ -18,8 +19,12 @@ namespace AutoEncoder
 
         private MainForm mainForm = MainForm.form;
         private SearchDirFiles tsFiles = new SearchDirFiles(PATH_DIR_RECORD, ".ts");
-        private string strInputFile = null;
-        private string strInputFileWithoutExtension = null;
+        private string strInputFilePath = null;
+        private string strInputFilePathWithoutExtension = null;
+        private string strOriginalFilePath = null;
+        private string strOriginalFilePathWithoutExtension = null;
+
+        Dictionary<string, Dictionary<string, ExternalAppSettings>> dicAllEncodeInfo = new Dictionary<string, Dictionary<string, ExternalAppSettings>>();
 
         #endregion 
 
@@ -41,16 +46,18 @@ namespace AutoEncoder
             // (放送局がTOKYO MXのファイルのAACファイルは壊れているので別途ts2aac.exeにて取得する)
             // 一つのファイルに二つの放送波が混在しているため？
 
+
             foreach (string file in tsFiles.FileNameWithoutExtension)
             {
                 // 録画ディレクトリ内のTSファイルをそれぞれ処理する
 
                 // グローバル変数に現在処理している.tsファイルを登録
-                strInputFile = Path.Combine(PATH_DIR_WORK, file + ".ts");
-                strInputFileWithoutExtension = Path.Combine(PATH_DIR_WORK, file);
 
-                // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
-                File.Move(PATH_DIR_RECORD + file + ".ts", strInputFile);
+                strInputFilePath = Path.Combine(PATH_DIR_WORK, "temp" + ".ts");
+                strInputFilePathWithoutExtension = Path.Combine(PATH_DIR_WORK, "temp");
+
+                strOriginalFilePath = Path.Combine(PATH_DIR_WORK, file + ".ts");
+                strOriginalFilePathWithoutExtension = Path.Combine(PATH_DIR_WORK, file);
 
                 Dictionary<string, ExternalAppSettings> dicSettings = new Dictionary<string, ExternalAppSettings>()
                 {
@@ -59,46 +66,46 @@ namespace AutoEncoder
                         "DgIndex"
                         , new ExternalAppSettings(
                             "DgIndex"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , DeleteAAC
-                            , strInputFileWithoutExtension)
+                            , strInputFilePathWithoutExtension)
                     },
                     {
                         // ts2aac.exeでtsファイルから壊れていないaacファイルを取得する
                         "Ts2Aac"
                         , new ExternalAppSettings(
                             "Ts2Aac"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , RenameAAC
-                            , strInputFileWithoutExtension)
+                            , strInputFilePathWithoutExtension)
                     },
                     {
                         // ToWaveでts2aac.exeから再取得したaacファイルをwavファイルへ変換
                         "ToWave"
                         , new ExternalAppSettings(
                             "ToWave"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             // avsファイルを作成する
                             , MakeAvs
-                            , strInputFileWithoutExtension)
+                            , strInputFilePathWithoutExtension)
                     },
                     {
                         // chapter_exeでavsファイルを読み込み、無音空間のフレームを検出したテキストファイルを出力する
                         "ChapterExe"
                         , new ExternalAppSettings(
                             "ChapterExe"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , null
-                            , strInputFileWithoutExtension)
+                            , strInputFilePathWithoutExtension)
                     },
                     {
                         // logoframe.exeでavsファイルを読み込み、ロゴが出現している区間のフレームを取得
                         "LogoFrame"
                         , new ExternalAppSettings(
                             "LogoFrame"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , null
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , Path.Combine(
                                     Program.CurrentDirectory
                                     , XDOCUMENT_CONFIG_LIBRARY.ReadConfig("LogoData", CONFIG_LIBRARY_NODE_PATH)
@@ -109,37 +116,57 @@ namespace AutoEncoder
                         "JoinLogo"
                         , new ExternalAppSettings(
                             "JoinLogo"
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , AddTrimDataToAVS
-                            , strInputFileWithoutExtension
-                            , strInputFileWithoutExtension
+                            , strInputFilePathWithoutExtension
+                            , strInputFilePathWithoutExtension
                             , Path.Combine(
                                 Program.CurrentDirectory
                                 , XDOCUMENT_CONFIG_LIBRARY.ReadConfig("JoinLogoConfig", CONFIG_LIBRARY_NODE_PATH)))
                     },
                     {
+                        // AviUtlを起動し、2秒待つ（bat内のWaitがうまく作動しないため、起動処理のみ分離）
                         "AviUtl"
                         , new ExternalAppSettings(
                             "AviUtl"
-                            , strInputFileWithoutExtension
-                            , null
-                            , strInputFileWithoutExtension
+                            , String.Empty
+                            , WaitProcess(2)
+                            , String.Empty
+                        )
+                    },
+                    {
+                        // AviutlでCMカット情報が記載されたavsをもとに動画をmp4へエンコードする
+                        "Auc"
+                        , new ExternalAppSettings(
+                            "Auc"
+                            , strInputFilePathWithoutExtension
+                            // 処理の一番最後なので、成果物の移動や一時ファイルの移動などを行う
+                            , AfterEncode(file)
+                            , String.Empty
+                            , strInputFilePathWithoutExtension
                         )
                     }
                 };
 
-                Task taskBefore = null;
-                foreach(KeyValuePair<string, ExternalAppSettings> settings in dicSettings)
+                dicAllEncodeInfo.Add(file, dicSettings);
+            }
+
+            #region 外部アプリケーションの処理
+            Task taskBefore = Task.Factory.StartNew(new Action(() => { }));
+
+            foreach (KeyValuePair<string, Dictionary<string, ExternalAppSettings>> dicAllSettings in dicAllEncodeInfo)
+            {
+                taskBefore = taskBefore.ContinueWith(new Action<Task>((task) =>
+                {
+                    // 録画ディレクトリのTSファイルを作業ディレクトリへ移動する
+                    File.Move(PATH_DIR_RECORD + dicAllSettings.Key + ".ts", strInputFilePath);
+                }));
+                foreach (KeyValuePair<string, ExternalAppSettings> settings in dicAllSettings.Value)
                 {
                     taskBefore = TaskExtAppExecute(settings.Value, taskBefore);
                 }
-
-                // AviutlでCMカット情報が記載されたavsをもとに動画をmp4へエンコードする
-
-                // ffmpegでtsのCMカットを行う（無圧縮、動画の切り抜き＋結合をするだけ）
-
-                // 出力した.ts、.mp4ファイルを指定フォルダへ保存＆リネーム（指定フォルダが存在しない場合は作成）
             }
+            #endregion
         }
         #endregion
 
@@ -162,7 +189,7 @@ namespace AutoEncoder
                 // 前処理が設定されていない場合、空のタスクを作成する
                 taskBefore = Task.Factory.StartNew(new Action(() => { }));
             }
-
+            
             // 非同期処理１（前に起動された非同期処理を待った後に行う）
             Action<Task> actFirst = new Action<Task>((task) =>
             {
@@ -281,7 +308,7 @@ namespace AutoEncoder
             {
                 string strOldAAC = strRenameAac.First();
 
-                string strNewAAC = strInputFileWithoutExtension + ".aac";
+                string strNewAAC = strInputFilePathWithoutExtension + ".aac";
 
                 // ファイル名の余計な文字列を削除
                 File.Move(strOldAAC, strNewAAC);
@@ -310,7 +337,7 @@ namespace AutoEncoder
         /// </summary>
         private void MakeAvs()
         {
-            string strAvsName = Path.Combine(strInputFileWithoutExtension + ".avs");
+            string strAvsName = Path.Combine(strInputFilePathWithoutExtension + ".avs");
             Dictionary<string, object> dicAvsContents = new Dictionary<string, object>();
 
             // DGDecode.dllのパス
@@ -318,8 +345,8 @@ namespace AutoEncoder
 
             dicAvsContents.Add("LoadPlugin", strDgDecodePath);
             dicAvsContents.Add("SetMemoryMax", 256);
-            dicAvsContents.Add("DGDecode_MPEG2Source", strInputFileWithoutExtension + ".d2v");
-            dicAvsContents.Add("WavSource", strInputFileWithoutExtension + ".wav");
+            dicAvsContents.Add("DGDecode_MPEG2Source", strInputFilePathWithoutExtension + ".d2v");
+            dicAvsContents.Add("WavSource", strInputFilePathWithoutExtension + ".wav");
             dicAvsContents.Add("interlaced", "true");
 
             using (StreamWriter swAvs = new StreamWriter(new FileStream(strAvsName, FileMode.Append), Encoding.GetEncoding(932)))
@@ -342,8 +369,8 @@ namespace AutoEncoder
         /// </summary>
         private void AddTrimDataToAVS()
         {
-            string strAVS = (strInputFileWithoutExtension + ".avs");
-            string strTrimData =  strInputFileWithoutExtension + "_Trim.txt";
+            string strAVS = (strInputFilePathWithoutExtension + ".avs");
+            string strTrimData =  strInputFilePathWithoutExtension + "_Trim.txt";
 
             using (StreamReader reader = new StreamReader(strTrimData))
             {
@@ -352,6 +379,50 @@ namespace AutoEncoder
                     writer.Write(reader.ReadToEnd());
                 }
             }
+        }
+
+        /// <summary>
+        /// TSファイルの名前を元に戻す
+        /// </summary>
+        private void RenameTS()
+        {
+            File.Move(strInputFilePath, strOriginalFilePath);
+        }
+
+        /// <summary>
+        /// 指定した秒数待つ
+        /// </summary>
+        private Action WaitProcess(int intSeconds)
+        {
+            return new Action(() => Thread.Sleep(intSeconds * 1000));
+        }
+
+        /// <summary>
+        /// すべての外部アプリケーションの処理が終了した後の処理
+        /// </summary>
+        private Action AfterEncode(string strOriginalFileName)
+        {
+            #region 外部アプリケーションの処理終了後の処理
+
+            return new Action(() =>
+            {
+                // TODO ffmpegでtsのCMカットを行う（無圧縮、動画の切り抜き＋結合をするだけ）
+
+                // 出力した.ts、.mp4ファイルを指定フォルダへ保存＆リネーム（指定フォルダが存在しない場合は作成）
+                File.Move(strInputFilePath, Path.Combine(PATH_DIR_OUTPUT_TS, strOriginalFileName + ".ts"));
+                File.Move(Path.ChangeExtension(strInputFilePath, ".mp4"), Path.Combine(PATH_DIR_OUTPUT_MP4, strOriginalFileName + ".mp4"));
+
+                // 作成された一時ファイルを移動
+                Directory.GetFiles(PATH_DIR_RECORD)
+                    .Select(item =>
+                    {
+                        string strFileName = Path.GetFileName(item);
+                        File.Move(Path.Combine(PATH_DIR_RECORD, strFileName), Path.Combine(PATH_DIR_OUTPUT_TEMP, strFileName.Replace("temp", strOriginalFileName)));
+                        return item;
+                    });
+            });
+
+            #endregion
         }
         #endregion
     }

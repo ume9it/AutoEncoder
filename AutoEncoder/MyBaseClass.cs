@@ -38,6 +38,7 @@ namespace AutoEncoder
         protected static readonly string CONFIG_AUTOENCODE_NODE_WORK = "Work";
         protected static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_MP4 = "OutputMp4";
         protected static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_TS = "OutputTs";
+        protected static readonly string CONFIG_AUTOENCODE_NODE_TEMP = "Temp";
 
         #endregion
 
@@ -88,6 +89,30 @@ namespace AutoEncoder
         /// AutoEncode.configをパースしたXDocument
         /// </summary>
         protected static readonly XDocument XDOCUMENT_CONFIG_AUTOENCODE = XDocument.Load(PATH_CONFIG_AUTOENCODE);
+
+        /// <summary>
+        /// TSファイルの出力先
+        /// </summary>
+        protected static readonly string PATH_DIR_OUTPUT_TS =
+            Path.Combine(Program.CurrentDirectory
+                , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_OUTPUT_TS)
+                );
+
+        /// <summary>
+        /// MP4ファイルの出力先
+        /// </summary>
+        protected static readonly string PATH_DIR_OUTPUT_MP4 =
+            Path.Combine(Program.CurrentDirectory
+                , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_OUTPUT_MP4)
+                );
+
+        /// <summary>
+        /// 中間ファイルの一時保管先
+        /// </summary>
+        protected static readonly string PATH_DIR_OUTPUT_TEMP =
+            Path.Combine(Program.CurrentDirectory
+                , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_TEMP)
+                );
 
         /// <summary>
         /// 録画ファイルを保存しているディレクトリのパス

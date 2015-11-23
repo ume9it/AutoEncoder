@@ -79,6 +79,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="App\Auc\auc.bat" />
+    <None Include="App\Auc\AviUtl.bat" />
     <None Include="AutoEncode.config" />
     <None Include="ExePath.config" />
     <None Include="Library.config" />
@@ -105,7 +106,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>xcopy /Y /Q /S /E $(ProjectDir)Library $(ProjectDir)$(OutDir)Library
-xcopy /Y /Q /S /E $(ProjectDir)*.config $(ProjectDir)$(OutDir)
+copy /Y $(ProjectDir)*.config $(ProjectDir)$(OutDir)
 xcopy /Y /Q /S /E $(ProjectDir)App $(ProjectDir)$(OutDir)App</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
