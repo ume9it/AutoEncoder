@@ -51,7 +51,6 @@
   <ItemGroup>
     <Compile Include="ExternalAppSettings.cs" />
     <Compile Include="MyBaseClass.cs" />
-    <Compile Include="MyControlExtGUI.cs" />
     <Compile Include="SearchDirFiles.cs" />
     <Compile Include="MyReadConfig.cs" />
     <Compile Include="MyAutoEncode.cs" />
@@ -79,6 +78,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="App\auc.bat" />
     <None Include="AutoEncode.config" />
     <None Include="ExePath.config" />
     <None Include="Library.config" />
@@ -100,6 +100,11 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>copy /y $(ProjectDir)App $(ProjectDir)\$(OutDir)App
+copy /y $(ProjectDir)Library $(ProjectDir)\$(OutDir)Library
+copy /y $(ProjectDir)*.config $(ProjectDir)\$(OutDir)</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
