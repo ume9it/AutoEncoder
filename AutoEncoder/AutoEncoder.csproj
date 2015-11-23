@@ -79,6 +79,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="AutoEncode.config" />
     <None Include="ExePath.config" />
     <None Include="Library.config" />
     <None Include="packages.config" />
