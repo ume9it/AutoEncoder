@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace AutoEncoder
 {
@@ -17,7 +18,7 @@ namespace AutoEncoder
         /// <param name="strAppDir">アプリケーションの格納されているディレクトリ</param>
         /// <param name="strAppArg">コマンドライン引数</param>
         /// <returns>外部アプリケーションの標準出力</returns>
-        public Process ProcessStart(ExternalAppSettings setting)
+        public static Process ProcessStart(ExternalAppSettings setting)
         {
             // プロセスのオブジェクトを作成
             Process process = new Process();
@@ -45,9 +46,8 @@ namespace AutoEncoder
                 // 起動失敗時にエラーダイアログを表示
                 process.StartInfo.ErrorDialog = true;
 
-                // 標準出力を取得するイベントハンドラ
-                process.OutputDataReceived += MainForm.GetInstance().process_OutputDataReceived;
-
+                //// 標準出力を取得するイベントハンドラ
+                process.OutputDataReceived += MainForm.form.process_OutputDataReceived;
                 process.Start();
                 process.BeginOutputReadLine();
             }

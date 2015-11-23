@@ -25,3 +25,14 @@
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.Properties.Resources.resources
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csproj.GenerateResource.Cache
 \\psf\Home\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.MainForm.resources
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.exe.config
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\WindowsFormsApplication4.exe
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\WindowsFormsApplication4.pdb
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.exe
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\bin\Debug\WindowsFormsApplication4.pdb
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csprojResolveAssemblyReference.cache
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.MainForm.resources
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.Properties.Resources.resources
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csproj.GenerateResource.Cache
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\bin\Debug\nunit.framework.dll
+C:\Users\tkuya\Documents\GitHub\AutoEncoder\AutoEncoder\bin\Debug\nunit.framework.xml

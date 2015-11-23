@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using NUnit.Framework;
 
 namespace AutoEncoder
 {
@@ -23,7 +24,7 @@ namespace AutoEncoder
             }
             else
             {
-                CurrentDirectory = System.Environment.CurrentDirectory;
+                CurrentDirectory = Environment.CurrentDirectory;
             }
 
             Application.EnableVisualStyles();

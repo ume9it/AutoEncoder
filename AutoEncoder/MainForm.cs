@@ -12,7 +12,7 @@ namespace AutoEncoder
 {
     public partial class MainForm : Form
     {
-        public static MainForm mainForm;
+        public static MainForm form;
         public static TextBox processDialog;
         public static Label processStatus;
         public static ProgressBar processProgress;
@@ -26,15 +26,7 @@ namespace AutoEncoder
         public MainForm()
         {
             InitializeComponent();
-        }
-
-        /// <summary>
-        /// 自身のインスタンスを取得
-        /// </summary>
-        /// <returns></returns>
-        public static MainForm GetInstance()
-        {
-            return mainForm;
+            form = this;
         }
 
         /// <summary>
@@ -45,7 +37,6 @@ namespace AutoEncoder
         private void Form1_Load(object sender, EventArgs e)
         {
             myExt = new MyExtApplication();
-            mainForm = this;
 
             processDialog = this.ProcessDialogTextBox;
             processStatus = this.ProcessStatusLabel;
@@ -110,10 +101,10 @@ namespace AutoEncoder
         public void InvokeAddText(Action<string, TextBox> controlModifier, string strMessage, TextBox textBox)
         {
             InvokeIfRequired(
-                (Action)delegate()
+                new Action(()=>
                 {
                     controlModifier(strMessage, textBox);
-                }, true);
+                }), true);
         }
 
         /// <summary>
@@ -123,10 +114,10 @@ namespace AutoEncoder
         public void InvokeUpdateLabel(Action<string, Label> controlModifier, string strMessage, Label label)
         {
             InvokeIfRequired(
-                (Action)delegate()
+                new Action(()=>
                 {
                     controlModifier(strMessage, label);
-                }, true);
+                }), true);
         }
 
         /// <summary>
@@ -138,10 +129,10 @@ namespace AutoEncoder
         public void InvokeAddProgress (Action<int, ProgressBar> controlModifier, int intProgress, ProgressBar progress)
         {
             InvokeIfRequired(
-                (Action)delegate()
+                new Action(()=>
                 {
                     controlModifier(intProgress, progress);
-                }, true);
+                }), true);
         }
 
         /// <summary>
@@ -152,19 +143,19 @@ namespace AutoEncoder
         public void process_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
             Console.WriteLine(e.Data);
-
+            
             if (e.Data != null)
             {
                 // 文字の出力が終わっていない場合
 
                 InvokeIfRequired(
-                    (Action)delegate()
+                    (Action)delegate ()
                     {
                         AddText(e.Data, processDialog);
                     }, true);
             }
         }
-
+        
         private void ProcessDialogTextBox_TextChanged(object sender, EventArgs e)
         {
         }
