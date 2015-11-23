@@ -78,7 +78,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="App\auc.bat" />
+    <None Include="App\Auc\auc.bat" />
     <None Include="AutoEncode.config" />
     <None Include="ExePath.config" />
     <None Include="Library.config" />
@@ -99,11 +99,14 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Library\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>copy /y $(ProjectDir)App $(ProjectDir)\$(OutDir)App
-copy /y $(ProjectDir)Library $(ProjectDir)\$(OutDir)Library
-copy /y $(ProjectDir)*.config $(ProjectDir)\$(OutDir)</PreBuildEvent>
+    <PreBuildEvent>xcopy /Y /Q /S /E $(ProjectDir)Library $(ProjectDir)$(OutDir)Library
+xcopy /Y /Q /S /E $(ProjectDir)*.config $(ProjectDir)$(OutDir)
+xcopy /Y /Q /S /E $(ProjectDir)App $(ProjectDir)$(OutDir)App</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

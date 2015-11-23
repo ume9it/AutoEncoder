@@ -1,7 +1,7 @@
-set auc=%~1
-set avs=%~2
-set Output=%~3
-set AviUtlPath=%~4
+set AviUtlPath=%~1
+set auc=%~2
+set avs=%~3
+set Output=%~4
 
 rem ~~~~~~CMカットの情報が載ったavsをAviUtlで開き、mp4にエンコードしてからAviUtlを閉じる~~~~~~
 start /b "" %AviUtlPath%
