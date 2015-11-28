@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AutoEncoder
 {
-    class MyExtApplication : MyBaseClass
+    class MyExtApplication
     {
         public MyExtApplication()
         {

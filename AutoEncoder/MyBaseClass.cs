@@ -19,37 +19,37 @@ namespace AutoEncoder
         #region ExePath.config
 
         // 要素
-        protected static readonly string CONFIG_EXEPATH_NODE_PATH = "Path";
-        protected static readonly string CONFIG_EXEPATH_NODE_OPTION = "Option";
-        protected static readonly string CONFIG_EXEPATH_NODE_INPUT = "Input";
-        protected static readonly string CONFIG_EXEPATH_NODE_OUTPUT = "Output";
-        protected static readonly string CONFIG_EXEPATH_NODE_FILE_ARG = "FileArg";
+        public static readonly string CONFIG_EXEPATH_NODE_PATH = "Path";
+        public static readonly string CONFIG_EXEPATH_NODE_OPTION = "Option";
+        public static readonly string CONFIG_EXEPATH_NODE_INPUT = "Input";
+        public static readonly string CONFIG_EXEPATH_NODE_OUTPUT = "Output";
+        public static readonly string CONFIG_EXEPATH_NODE_FILE_ARG = "FileArg";
 
         // 属性
-        protected static readonly string CONFIG_EXEPATH_ATTRIBUTE_FILE_EXT = "Ext";
+        public static readonly string CONFIG_EXEPATH_ATTRIBUTE_FILE_EXT = "Ext";
 
         #endregion
 
         #region AutoEncode.config
 
         // 要素
-        protected static readonly string CONFIG_AUTOENCODE_DIR = "Directory";
-        protected static readonly string CONFIG_AUTOENCODE_NODE_REC = "Rec";
-        protected static readonly string CONFIG_AUTOENCODE_NODE_WORK = "Work";
-        protected static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_MP4 = "OutputMp4";
-        protected static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_TS = "OutputTs";
-        protected static readonly string CONFIG_AUTOENCODE_NODE_TEMP = "Temp";
+        public static readonly string CONFIG_AUTOENCODE_DIR = "Directory";
+        public static readonly string CONFIG_AUTOENCODE_NODE_REC = "Rec";
+        public static readonly string CONFIG_AUTOENCODE_NODE_WORK = "Work";
+        public static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_MP4 = "OutputMp4";
+        public static readonly string CONFIG_AUTOENCODE_NODE_OUTPUT_TS = "OutputTs";
+        public static readonly string CONFIG_AUTOENCODE_NODE_TEMP = "Temp";
 
         #endregion
 
         #region Library.config
 
         // 要素
-        protected static readonly string CONFIG_LIBRARY_NODE_PATH = "Path";
-        protected static readonly string CONFIG_LIBRARY_NODE_FILE = "File";
+        public static readonly string CONFIG_LIBRARY_NODE_PATH = "Path";
+        public static readonly string CONFIG_LIBRARY_NODE_FILE = "File";
 
         // 属性
-        protected static readonly string CONFIG_LIBRARY_ATTRIBUTE_FILE_EXT = "Ext";
+        public static readonly string CONFIG_LIBRARY_ATTRIBUTE_FILE_EXT = "Ext";
 
         #endregion
 
@@ -60,40 +60,40 @@ namespace AutoEncoder
         /// <summary>
         /// ExePath.configのファイルパス
         /// </summary>
-        protected static readonly string PATH_CONFIG_EXEPATH =
+        public static readonly string PATH_CONFIG_EXEPATH =
             Path.Combine(Program.CurrentDirectory, "ExePath.config");
 
         /// <summary>
         /// Library.configのファイルパス
         /// </summary>
-        protected static readonly string PATH_CONFIG_LIBRARY =
+        public static readonly string PATH_CONFIG_LIBRARY =
             Path.Combine(Program.CurrentDirectory, "Library.config");
 
         /// <summary>
         /// AutoEncode.configのファイルパス
         /// </summary>
-        protected static readonly string PATH_CONFIG_AUTOENCODE =
+        public static readonly string PATH_CONFIG_AUTOENCODE =
             Path.Combine(Program.CurrentDirectory, "AutoEncode.config");
 
         /// <summary>
         /// ExePath.configをパースしたXDocument
         /// </summary>
-        protected static readonly XDocument XDOCUMENT_CONFIG_EXEPATH = XDocument.Load(PATH_CONFIG_EXEPATH);
+        public static readonly XDocument XDOCUMENT_CONFIG_EXEPATH = XDocument.Load(PATH_CONFIG_EXEPATH);
 
         /// <summary>
         /// Library.configをパースしたXDocument
         /// </summary>
-        protected static readonly XDocument XDOCUMENT_CONFIG_LIBRARY = XDocument.Load(PATH_CONFIG_LIBRARY);
+        public static readonly XDocument XDOCUMENT_CONFIG_LIBRARY = XDocument.Load(PATH_CONFIG_LIBRARY);
 
         /// <summary>
         /// AutoEncode.configをパースしたXDocument
         /// </summary>
-        protected static readonly XDocument XDOCUMENT_CONFIG_AUTOENCODE = XDocument.Load(PATH_CONFIG_AUTOENCODE);
+        public static readonly XDocument XDOCUMENT_CONFIG_AUTOENCODE = XDocument.Load(PATH_CONFIG_AUTOENCODE);
 
         /// <summary>
         /// TSファイルの出力先
         /// </summary>
-        protected static readonly string PATH_DIR_OUTPUT_TS =
+        public static readonly string PATH_DIR_OUTPUT_TS =
             Path.Combine(Program.CurrentDirectory
                 , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_OUTPUT_TS)
                 );
@@ -101,7 +101,7 @@ namespace AutoEncoder
         /// <summary>
         /// MP4ファイルの出力先
         /// </summary>
-        protected static readonly string PATH_DIR_OUTPUT_MP4 =
+        public static readonly string PATH_DIR_OUTPUT_MP4 =
             Path.Combine(Program.CurrentDirectory
                 , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_OUTPUT_MP4)
                 );
@@ -109,7 +109,7 @@ namespace AutoEncoder
         /// <summary>
         /// 中間ファイルの一時保管先
         /// </summary>
-        protected static readonly string PATH_DIR_OUTPUT_TEMP =
+        public static readonly string PATH_DIR_OUTPUT_TEMP =
             Path.Combine(Program.CurrentDirectory
                 , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_TEMP)
                 );
@@ -117,7 +117,7 @@ namespace AutoEncoder
         /// <summary>
         /// 録画ファイルを保存しているディレクトリのパス
         /// </summary>
-        protected static readonly string PATH_DIR_RECORD =
+        public static readonly string PATH_DIR_RECORD =
             Path.Combine(Program.CurrentDirectory
                 , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_REC)
                 );
@@ -125,7 +125,7 @@ namespace AutoEncoder
         /// <summary>
         /// 作業用一時ファイルを置くディレクトリのパス
         /// </summary>
-        protected static readonly string PATH_DIR_WORK =
+        public static readonly string PATH_DIR_WORK =
             Path.Combine(Program.CurrentDirectory
                 , XDOCUMENT_CONFIG_AUTOENCODE.ReadConfig(CONFIG_AUTOENCODE_DIR, CONFIG_AUTOENCODE_NODE_WORK)
                 );
@@ -133,13 +133,13 @@ namespace AutoEncoder
         /// <summary>
         /// ロゴデータを置くディレクトリのパス
         /// </summary>
-        protected static readonly string PATH_DIR_LOGODATA =
+        public static readonly string PATH_DIR_LOGODATA =
             XDOCUMENT_CONFIG_LIBRARY.ReadConfig("LogoData", "Path");
 
         /// <summary>
         /// 各ロゴデータの配置パス
         /// </summary>
-        protected static readonly Dictionary<string, string> DICTIONARY_PATH_FILE_LOGODATA =
+        public static readonly Dictionary<string, string> DICTIONARY_PATH_FILE_LOGODATA =
             XDOCUMENT_CONFIG_LIBRARY.GetConfigXElement("LogoData", "File")
             .Select(item =>
             {

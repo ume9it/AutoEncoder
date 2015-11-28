@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static AutoEncoder.MyBaseClass;
 
 namespace AutoEncoder
 {
-    class ExternalAppSettings : MyBaseClass
+    class ExternalAppSettings
     {
         public string AppRoot { get; private set; }
         public List<string> InputFile { get; private set; }

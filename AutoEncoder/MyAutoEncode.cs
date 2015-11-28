@@ -10,10 +10,11 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using NUnit.Framework;
 using System.Threading;
+using static AutoEncoder.MyBaseClass;
 
 namespace AutoEncoder
 {
-    class MyAutoEncode : MyBaseClass
+    class MyAutoEncode
     {
         #region フィールド
 
