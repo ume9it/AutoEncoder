@@ -55,15 +55,7 @@ namespace AutoEncoder
         private void button1_Click(object sender, EventArgs e)
         {
             myAutoEncode = new MyAutoEncode();
-            try
-            {
-                myAutoEncode.EncodeMovie();
-            }
-            catch(Exception ex)
-            {
-                MyErrorHandling.showErrorMessage(ex.Message);
-                Console.WriteLine(ex.Message + "\r\n" + ex.StackTrace);
-            }
+            myAutoEncode.EncodeMovie();
         }
 
         /// <summary>

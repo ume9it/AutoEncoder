@@ -47,6 +47,8 @@ namespace AutoEncoder
             // (放送局がTOKYO MXのファイルのAACファイルは壊れているので別途ts2aac.exeにて取得する)
             // 一つのファイルに二つの放送波が混在しているため？
 
+            string str = null;
+            str.Replace("", "fff");
 
             foreach (string file in tsFiles.FileNameWithoutExtension)
             {

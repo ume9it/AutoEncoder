@@ -47,3 +47,6 @@ Y:\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csprojResolveAssemblyRef
 Y:\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.MainForm.resources
 Y:\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.Properties.Resources.resources
 Y:\GitHub\AutoEncoder\AutoEncoder\obj\Debug\AutoEncoder.csproj.GenerateResource.Cache
+Y:\GitHub\AutoEncoder\AutoEncoder\bin\Debug\NLog.config
+Y:\GitHub\AutoEncoder\AutoEncoder\bin\Debug\NLog.dll
+Y:\GitHub\AutoEncoder\AutoEncoder\bin\Debug\NLog.xml

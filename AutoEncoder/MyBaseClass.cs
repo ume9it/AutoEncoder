@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NLog;
 
 namespace AutoEncoder
 {
@@ -14,6 +15,7 @@ namespace AutoEncoder
     /// </summary>
     class MyBaseClass 
     {
+
         #region Config内要素
 
         #region ExePath.config
