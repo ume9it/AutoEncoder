@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NUnit.Framework;
+using NLog;
 
 namespace AutoEncoder
 {
@@ -17,6 +18,12 @@ namespace AutoEncoder
         [STAThread]
         static void Main(string[] args)
         {
+            ILogger logger = LogManager.GetCurrentClassLogger();
+            logger.Debug("test");
+            logger.Error("test");
+            logger.Warn("test");
+            logger.Info("test");
+            logger.Fatal("test");
             if (args.Any())
             {
                 // wine対応（wineではカレントディレクトリが正しく認識されないため、渡された引数をプログラムのカレントディレクトリとみなす）

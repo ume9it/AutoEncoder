@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static AutoEncoder.MyBaseClass;
 
 namespace AutoEncoder
 {
@@ -43,7 +44,7 @@ namespace AutoEncoder
             processProgress = this.ProcessProgressBar;
             
             // プログレスバーを初期値に設定
-            processProgress.Maximum = 8;
+            processProgress.Maximum = XDOCUMENT_CONFIG_EXEPATH.Root.Elements().Count();
             processProgress.Minimum = 0;
         }
 
