@@ -43,7 +43,7 @@ namespace AutoEncoder
             processProgress = this.ProcessProgressBar;
             
             // プログレスバーを初期値に設定
-            processProgress.Maximum = 6;
+            processProgress.Maximum = 8;
             processProgress.Minimum = 0;
         }
 
@@ -62,6 +62,7 @@ namespace AutoEncoder
             catch(Exception ex)
             {
                 MyErrorHandling.showErrorMessage(ex.Message);
+                Console.WriteLine(ex.Message + "\r\n" + ex.StackTrace);
             }
         }
 
